@@ -119,14 +119,14 @@ async function getTenantAccessToken(env) {
 
 async function createBitableRecord(env, tableId, fields) {
   const token = await getTenantAccessToken(env)
-  const url = `https://open.feishu.cn/open-apis/bitable/v1/apps/${env.LARK_BASE_TOKEN}/tables/${tableId}/records`
+  const url = `https://open.feishu.cn/open-apis/base/v3/bases/${env.LARK_BASE_TOKEN}/tables/${tableId}/records`
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json; charset=utf-8',
     },
-    body: JSON.stringify({ fields }),
+    body: JSON.stringify(fields),
   })
 
   const data = await response.json()

@@ -3,7 +3,7 @@ main = "src/index.mjs"
 compatibility_date = "2026-05-15"
 
 [vars]
-LARK_BASE_TOKEN = "PysGbRtnQat98Gs95O4cV4yjnwe"
-LARK_EVENT_TABLE_ID = "tbllGGoU2J9dmOc6"
-LARK_FEEDBACK_TABLE_ID = "tbl0yNGEENcbZ4YT"
+LARK_BASE_TOKEN = "IYvLbBucgaf86SsSh3rcP3PVnNe"
+LARK_EVENT_TABLE_ID = "tblZC5lMAULvq6Sr"
+LARK_FEEDBACK_TABLE_ID = "tblxpaWpGFzOMmFc"
 ALLOWED_ORIGINS = "https://www.ankang.site,https://ankang.site"
