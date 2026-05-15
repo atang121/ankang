@@ -820,10 +820,10 @@
   .history-summary span { color: var(--c-primary); }
 
   /* ===== PAGE: 设置 ===== */
-  #page-settings .page-scroll { padding: 20px 16px; }
+  #page-settings .page-scroll { padding: 18px 16px calc(var(--tab-h) + var(--safe-bottom) + 18px); }
 
   .settings-section {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
   .settings-title {
     font-size: 12px;
@@ -835,8 +835,28 @@
     padding-left: 4px;
   }
 
-  .settings-card {
-    padding: 0 20px;
+  .settings-card { padding: 16px; }
+  .standard-card,
+  .data-card,
+  .help-card,
+  .danger-card { box-shadow: 0 4px 18px rgba(45,184,122,0.06); }
+  .standard-main,
+  .setting-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .setting-label {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--c-dark);
+  }
+  .setting-sub {
+    margin-top: 4px;
+    color: var(--c-muted);
+    font-size: 11px;
+    line-height: 1.45;
   }
   .info-row {
     display: flex;
@@ -849,46 +869,46 @@
   .info-row:last-child { border-bottom: none; }
   .info-row-label { font-weight: 500; color: var(--c-dark); }
   .info-row-value { font-weight: 600; color: var(--c-primary); }
-  .standard-row {
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .standard-values {
+  .standard-readout {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: center;
+    gap: 10px;
+    margin: 14px 0;
+    padding: 12px;
+    border-radius: 14px;
+    background: #f4faf7;
+    border: 1px solid rgba(45,184,122,0.10);
   }
   .standard-pill {
     display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
-    padding: 6px 8px;
-    border-radius: 10px;
-    background: #f0f7f3;
-    border: 1px solid rgba(45,184,122,0.10);
-    color: var(--c-dark);
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 92px;
   }
   .standard-pill b {
     color: var(--c-primary);
-    font-size: 15px;
+    font-size: 24px;
+    line-height: 1.1;
   }
   .standard-pill span {
     color: var(--c-muted);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
   }
-  .standard-separator { color: var(--c-muted); font-weight: 600; }
+  .standard-separator { color: var(--c-muted); font-size: 24px; font-weight: 600; }
   .mini-link-btn {
     border: none;
-    background: transparent;
+    background: var(--c-green-soft);
     color: var(--c-primary);
     font-size: 12px;
     font-weight: 700;
     font-family: var(--font);
     cursor: pointer;
-    padding: 4px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    flex-shrink: 0;
   }
   .standard-editor-grid {
     display: grid;
@@ -912,14 +932,16 @@
     font-size: 11px;
     color: var(--c-muted);
     line-height: 1.5;
-    padding: 8px 0 16px;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid rgba(45,184,122,0.06);
   }
 
   .export-actions {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 16px 20px;
+    padding: 0;
   }
   .export-actions .btn { width: 100%; padding: 14px; font-size: 15px; }
 
@@ -930,16 +952,79 @@
     padding: 12px 16px;
     background: var(--c-amber-soft);
     border-radius: 10px;
-    margin: 0 16px 8px;
+    margin: 0 0 10px;
     font-size: 12px;
     color: var(--c-amber-text);
     font-weight: 500;
     line-height: 1.5;
   }
   .backup-reminder svg { flex-shrink: 0; }
+  .backup-reminder.overdue {
+    background: rgba(45,184,122,0.08);
+    color: var(--c-green-text);
+  }
+  .data-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .action-tile {
+    min-height: 70px;
+    border: 1.5px solid rgba(45,184,122,0.13);
+    border-radius: 14px;
+    background: #f8fcfa;
+    color: var(--c-dark);
+    font-family: var(--font);
+    text-align: left;
+    padding: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .action-tile:active { transform: scale(0.98); }
+  .action-tile b {
+    display: block;
+    font-size: 14px;
+    color: var(--c-dark);
+    margin-bottom: 4px;
+  }
+  .action-tile span {
+    display: block;
+    font-size: 11px;
+    color: var(--c-muted);
+    line-height: 1.35;
+  }
+  .action-tile.primary {
+    background: linear-gradient(135deg, rgba(45,184,122,0.12), rgba(62,198,176,0.08));
+    border-color: rgba(45,184,122,0.22);
+  }
 
   .danger-zone { margin-top: 24px; }
-  .danger-zone .btn-danger { width: 100%; padding: 14px; }
+  .danger-zone .settings-title { color: var(--c-red); }
+  .danger-card { border-color: rgba(232,93,93,0.14); }
+  .danger-card .setting-line { padding-bottom: 12px; border-bottom: 1px solid rgba(232,93,93,0.10); }
+  .danger-link-btn {
+    width: 100%;
+    margin-top: 12px;
+    border: none;
+    background: transparent;
+    color: var(--c-red-text);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: var(--font);
+    padding: 8px;
+    cursor: pointer;
+  }
+  @media (max-width: 360px) {
+    .help-grid { grid-template-columns: 1fr; }
+    .standard-readout { gap: 6px; }
+    .standard-pill { min-width: 78px; }
+    .standard-pill b { font-size: 21px; }
+  }
 
   /* ===== MODAL ===== */
   .input-row {
@@ -1179,17 +1264,20 @@
     <div class="page-scroll">
       <div class="settings-section">
         <div class="settings-title">判定标准</div>
-        <div class="card settings-card">
-          <div class="info-row standard-row">
-            <span class="info-row-label">单次偏高提醒</span>
-            <span class="info-row-value standard-values">
-              <span class="standard-pill"><span>高压/收缩压</span><b id="standard-high-display">≥140</b></span>
-              <span class="standard-separator">/</span>
-              <span class="standard-pill"><span>低压/舒张压</span><b id="standard-low-display">≥90</b></span>
-              <button class="mini-link-btn" onclick="showStandardEditor()">自定义</button>
-            </span>
+        <div class="card settings-card standard-card">
+          <div class="standard-main">
+            <div>
+              <div class="setting-label">单次偏高提醒</div>
+              <div class="setting-sub">超过任一数值时，会标记为偏高</div>
+            </div>
+            <button class="mini-link-btn" onclick="showStandardEditor()">自定义</button>
           </div>
-          <div class="info-row">
+          <div class="standard-readout">
+            <span class="standard-pill"><span>高压/收缩压</span><b id="standard-high-display">≥140</b></span>
+            <span class="standard-separator">/</span>
+            <span class="standard-pill"><span>低压/舒张压</span><b id="standard-low-display">≥90</b></span>
+          </div>
+          <div class="setting-line">
             <span class="info-row-label">家庭均值关注</span>
             <span class="info-row-value">≥135 / 85</span>
           </div>
@@ -1198,21 +1286,21 @@
       </div>
 
       <div class="settings-section">
-        <div class="settings-title">数据管理</div>
+        <div class="settings-title">数据安全</div>
         <div class="backup-reminder" style="display:flex">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <span>数据仅保存在当前手机浏览器中。清理浏览器数据、换手机或更换浏览器可能导致记录丢失，请定期备份。</span>
         </div>
-        <div class="backup-reminder" id="backup-reminder" style="display:none">
+        <div class="backup-reminder overdue" id="backup-reminder" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          <span>您已超过 7 天未备份数据，建议及时备份以防丢失</span>
+          <span>已超过 7 天未备份，建议现在备份一次。</span>
         </div>
-        <div class="card settings-card">
-          <div class="export-actions">
+        <div class="card settings-card data-card">
+          <div class="data-actions">
             <button class="btn btn-teal" onclick="exportJSON()">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;margin-right:6px">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1235,13 +1323,13 @@
       </div>
 
       <div class="settings-section">
-        <div class="settings-title">安装与反馈</div>
-        <div class="card settings-card">
-          <div class="export-actions">
-            <button class="btn btn-primary" onclick="openGuide()">使用说明</button>
-            <button class="btn btn-ghost" onclick="installApp()">添加到桌面 / 主屏幕</button>
-            <button class="btn btn-ghost" onclick="copyAppLink()">复制网址</button>
-            <button class="btn btn-teal" onclick="openFeedback()">意见反馈</button>
+        <div class="settings-title">帮助与使用</div>
+        <div class="card settings-card help-card">
+          <div class="help-grid">
+            <button class="action-tile primary" onclick="openGuide()"><b>使用说明</b><span>查看记录、趋势和备份方法</span></button>
+            <button class="action-tile" onclick="installApp()"><b>添加到桌面</b><span>像 App 一样从桌面打开</span></button>
+            <button class="action-tile" onclick="copyAppLink()"><b>复制网址</b><span>分享给家人或换浏览器打开</span></button>
+            <button class="action-tile" onclick="openFeedback()"><b>意见反馈</b><span>提交建议或遇到的问题</span></button>
           </div>
         </div>
       </div>
@@ -1262,15 +1350,13 @@
       </div>
 
       <div class="settings-section danger-zone">
-        <div class="settings-title" style="color:var(--c-red)">危险操作</div>
-        <div class="card settings-card">
-          <div class="info-row">
+        <div class="settings-title">危险操作</div>
+        <div class="card settings-card danger-card">
+          <div class="setting-line">
             <span class="info-row-label">记录总数</span>
             <span class="info-row-value" id="total-count">0 条</span>
           </div>
-        </div>
-        <div style="margin-top:8px">
-          <button class="btn btn-danger" onclick="clearAllRecords()">清空所有记录</button>
+          <button class="danger-link-btn" onclick="clearAllRecords()">清空所有记录</button>
         </div>
       </div>
     </div>
@@ -1539,7 +1625,7 @@ const ADMIN_KEY = 'bp_admin_enabled_v1'
 const LOCAL_NOTICE_KEY = 'bp_local_notice_seen_v1'
 const STANDARD_KEY = 'bp_standard_v1'
 const PUBLIC_APP_URL = 'https://www.ankang.site'
-const APP_VERSION = '1.4.4'
+const APP_VERSION = '1.4.5'
 const API_BASE = (window.ANKANG_API_BASE || '').replace(/\/$/, '')
 const API_FALLBACK_BASE = 'https://ankang-api.tangwaytoagi.workers.dev'
 let deferredInstallPrompt = null
