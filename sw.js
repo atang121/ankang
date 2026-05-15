@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ankang-bp-v1.4.0'
+const CACHE_NAME = 'ankang-bp-v1.4.1'
 const APP_ASSETS = [
   './',
   './index.html',
@@ -26,17 +26,15 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request
   if (request.method !== 'GET') return
+  if (new URL(request.url).origin !== location.origin) return
 
   event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached
-      return fetch(request).then(response => {
+    fetch(request).then(response => {
+      if (response.ok) {
         const copy = response.clone()
-        if (response.ok && new URL(request.url).origin === location.origin) {
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy))
-        }
-        return response
-      }).catch(() => caches.match('./index.html'))
-    }),
+        caches.open(CACHE_NAME).then(cache => cache.put(request, copy))
+      }
+      return response
+    }).catch(() => caches.match(request).then(cached => cached || caches.match('./index.html'))),
   )
 })

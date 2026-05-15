@@ -1432,7 +1432,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="hideModal('feedback')">取消</button>
-      <button class="btn btn-primary" onclick="submitFeedback()">提交</button>
+      <button class="btn btn-primary" id="feedback-submit-btn" onclick="submitFeedback()">提交</button>
     </div>
   </div>
 </div>
@@ -1490,7 +1490,7 @@ const ADMIN_KEY = 'bp_admin_enabled_v1'
 const LOCAL_NOTICE_KEY = 'bp_local_notice_seen_v1'
 const STANDARD_KEY = 'bp_standard_v1'
 const PUBLIC_APP_URL = 'https://www.ankang.site'
-const APP_VERSION = '1.4.0'
+const APP_VERSION = '1.4.1'
 const API_BASE = (window.ANKANG_API_BASE || '').replace(/\/$/, '')
 let deferredInstallPrompt = null
 
@@ -1616,12 +1616,14 @@ async function openFeedback() {
 }
 
 async function submitFeedback() {
+  const submitBtn = document.getElementById('feedback-submit-btn')
   const content = document.getElementById('feedback-content').value.trim()
   if (!content) { showToast('请填写反馈内容'); return }
   if (!API_BASE) {
     showToast('暂时无法提交，请稍后再试')
     return
   }
+  if (submitBtn && submitBtn.disabled) return
 
   const payload = window.AnkangLogic.buildFeedbackPayload({
     type: document.getElementById('feedback-type').value,
@@ -1635,6 +1637,10 @@ async function submitFeedback() {
   })
 
   try {
+    if (submitBtn) {
+      submitBtn.disabled = true
+      submitBtn.textContent = '提交中...'
+    }
     const res = await fetch(API_BASE + '/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1647,6 +1653,11 @@ async function submitFeedback() {
   } catch (err) {
     showToast('提交失败，请稍后再试')
     trackEvent('feedback', { action: 'submit_fail', page: currentTab, result: 'network_error' })
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false
+      submitBtn.textContent = '提交'
+    }
   }
 }
 
