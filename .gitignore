@@ -1,0 +1,10 @@
+.DS_Store
+.superpowers/
+.workbuddy/
+docs/superpowers/
+node_modules/
+.wrangler/
+.dev.vars
+.env
+dist/
+*.log

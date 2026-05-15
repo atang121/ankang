@@ -1,0 +1,12 @@
+{
+  "name": "ankang",
+  "version": "1.4.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/app-logic.test.mjs",
+    "check": "node --check app-logic.js && node --check worker/src/index.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.18.0"
+  }
+}

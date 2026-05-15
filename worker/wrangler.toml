@@ -1,0 +1,9 @@
+name = "ankang-api"
+main = "src/index.mjs"
+compatibility_date = "2026-05-15"
+
+[vars]
+LARK_BASE_TOKEN = "PysGbRtnQat98Gs95O4cV4yjnwe"
+LARK_EVENT_TABLE_ID = "tbllGGoU2J9dmOc6"
+LARK_FEEDBACK_TABLE_ID = "tbl0yNGEENcbZ4YT"
+ALLOWED_ORIGINS = "https://www.ankang.site,https://ankang.site"

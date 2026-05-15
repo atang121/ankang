@@ -1,0 +1,2919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f9f7">
+<meta name="description" content="安康血压记录 - 轻松记录和追踪您的血压数据">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
+<title>安康血压记录</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c-bg: #f5f9f7;
+    --c-bg2: #eaf3ee;
+    --c-primary: #2db87a;
+    --c-primary2: #1a9d65;
+    --c-primary-light: rgba(45,184,122,0.10);
+    --c-accent: #f5a623;
+    --c-accent2: #e8941a;
+    --c-teal: #3ec6b0;
+    --c-teal2: #2aaf9a;
+    --c-red: #e85d5d;
+    --c-red2: #d14545;
+    --c-green: #2db87a;
+    --c-green-soft: rgba(45,184,122,0.12);
+    --c-green-text: #1a7a4e;
+    --c-amber-soft: rgba(245,166,35,0.14);
+    --c-amber-text: #9a6b00;
+    --c-red-soft: rgba(232,93,93,0.12);
+    --c-red-text: #b83232;
+    --c-dark: #1e2d2b;
+    --c-muted: #6b8a82;
+    --c-white: #ffffff;
+    --c-glass: rgba(255,253,250,0.96);
+    --c-glass2: rgba(255,253,250,0.99);
+    --shadow-card: 0 6px 24px rgba(45,184,122,0.08);
+    --shadow-btn: 0 6px 20px rgba(45,184,122,0.22);
+    --radius-card: 20px;
+    --radius-btn: 14px;
+    --font: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+    --tab-h: 64px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  html, body {
+    height: 100%;
+    height: -webkit-fill-available;
+    background: var(--c-bg);
+    font-family: var(--font);
+    color: var(--c-dark);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body,
+  body *:not(input):not(textarea):not(select):not(option) {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, textarea, select, option {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
+  .press-safe,
+  .press-safe *:not(input):not(textarea):not(select):not(option) {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+  }
+  .press-safe { touch-action: manipulation; }
+
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: linear-gradient(180deg, var(--c-bg) 0%, var(--c-bg2) 100%);
+    box-shadow: 0 0 80px rgba(45,184,122,0.08);
+    overflow: hidden;
+  }
+
+  .page-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(45,184,122,0.15) transparent;
+  }
+  .page-scroll::-webkit-scrollbar { width: 4px; }
+  .page-scroll::-webkit-scrollbar-track { background: transparent; }
+  .page-scroll::-webkit-scrollbar-thumb { background: rgba(45,184,122,0.15); border-radius: 2px; }
+
+  .page { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .page.active { display: flex; }
+
+  .tabbar {
+    flex-shrink: 0;
+    height: calc(var(--tab-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--c-glass2);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    display: flex;
+    border-top: 1px solid rgba(45,184,122,0.08);
+    box-shadow: 0 -4px 20px rgba(45,184,122,0.05);
+    z-index: 100;
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .tab-item svg { width: 22px; height: 22px; transition: transform 0.2s; }
+  .tab-item span { font-size: 10px; font-weight: 500; color: #aaa; transition: color 0.2s; }
+  .tab-item.active svg { transform: scale(1.15); }
+  .tab-item.active span { color: var(--c-primary); font-weight: 700; }
+
+  .card {
+    background: var(--c-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 20px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--radius-btn);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    letter-spacing: 0.3px;
+  }
+  .btn:active { transform: translateY(1px) scale(0.98); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary2) 100%);
+    color: #fff;
+    box-shadow: var(--shadow-btn);
+  }
+  .btn-teal {
+    background: linear-gradient(135deg, var(--c-teal) 0%, var(--c-teal2) 100%);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(62,198,176,0.25);
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, var(--c-red) 0%, var(--c-red2) 100%);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(232,93,93,0.2);
+  }
+  .btn-ghost {
+    background: #f0f7f3;
+    color: var(--c-primary);
+    border: 1.5px solid rgba(45,184,122,0.15);
+  }
+  .btn-ghost:hover { background: #e6f2ec; }
+  .btn-block { width: 100%; }
+  .btn:disabled {
+    background: #e0e0e0 !important;
+    color: #aaa !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .input-field, .textarea-field {
+    width: 100%;
+    border: 2px solid #dde9e3;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: var(--font);
+    color: var(--c-dark);
+    background: #f8faf9;
+    transition: all 0.2s;
+    outline: none;
+  }
+  .input-field:focus, .textarea-field:focus {
+    border-color: var(--c-primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(45,184,122,0.08);
+  }
+  .textarea-field { resize: none; min-height: 80px; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30,45,43,0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 9999;
+    padding: 0;
+    animation: fadeIn 0.15s ease;
+  }
+  @media (min-height: 600px) {
+    .modal-overlay { align-items: center; padding: 20px; }
+    .modal-box { border-radius: 24px; }
+  }
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  @keyframes slideUp { from { transform:translateY(30px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+  .modal-box {
+    background: var(--c-glass2);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px calc(28px + var(--safe-bottom));
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 40px rgba(45,184,122,0.12);
+    animation: slideUp 0.2s ease;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--c-dark);
+  }
+  .modal-subtitle {
+    font-size: 12px;
+    color: var(--c-muted);
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-actions .btn { flex: 1; }
+
+  #toast {
+    position: fixed;
+    bottom: calc(var(--tab-h) + var(--safe-bottom) + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(30,45,43,0.88);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 99999;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    max-width: 300px;
+    white-space: normal;
+    text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ===== PAGE: 首页 ===== */
+  .index-header {
+    flex-shrink: 0;
+    background: var(--c-glass);
+    backdrop-filter: blur(20px);
+    padding: 20px 20px 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(45,184,122,0.05);
+  }
+  .index-brand {
+    font-size: 11px;
+    color: var(--c-primary);
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .index-date {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-dark);
+    letter-spacing: 0.5px;
+  }
+
+  .overview-card {
+    margin: 16px 16px 12px;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .overview-item {
+    text-align: center;
+    padding: 12px 8px;
+    background: #f4f9f6;
+    border-radius: 12px;
+    border: 1px solid rgba(45,184,122,0.08);
+  }
+  .overview-label {
+    font-size: 11px;
+    color: var(--c-muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .overview-value {
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .overview-value.high { color: var(--c-red); }
+  .overview-value.low { color: var(--c-primary); }
+  .overview-value.pulse { color: var(--c-teal); }
+  .overview-unit {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--c-muted);
+  }
+  .overview-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .overview-status.normal { background: var(--c-green-soft); color: var(--c-green-text); }
+  .overview-status.warning { background: var(--c-amber-soft); color: var(--c-amber-text); }
+  .overview-status.danger { background: var(--c-red-soft); color: var(--c-red-text); }
+  .overview-time {
+    font-size: 11px;
+    color: var(--c-muted);
+    text-align: center;
+    margin-top: 8px;
+  }
+  .overview-avg {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--c-muted);
+  }
+  .overview-avg b { color: var(--c-dark); font-weight: 700; }
+
+  .today-list-wrap { flex: 1; padding: 0 16px 10px; }
+  .section-label {
+    font-size: 12px;
+    color: var(--c-primary);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  .record-item {
+    background: var(--c-glass);
+    backdrop-filter: blur(20px);
+    padding: 16px;
+    margin-bottom: 10px;
+    border-radius: 16px;
+    display: flex;
+    align-items: flex-start;
+    box-shadow: 0 4px 16px rgba(45,184,122,0.06);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+    animation: slideUp 0.2s ease both;
+    cursor: pointer;
+  }
+  .record-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(45,184,122,0.10); }
+  .record-item:active { transform: scale(0.98); }
+  .record-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .record-item.normal::before { background: linear-gradient(180deg, var(--c-green) 0%, #1a9d65 100%); }
+  .record-item.warning::before { background: linear-gradient(180deg, #f5a623 0%, var(--c-amber-text) 100%); }
+  .record-item.danger::before { background: linear-gradient(180deg, var(--c-red) 0%, var(--c-red2) 100%); }
+
+  .record-content { flex: 1; min-width: 0; }
+  .record-bp {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--c-dark);
+    margin-bottom: 4px;
+  }
+  .record-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--c-muted);
+    font-weight: 500;
+  }
+  .record-chip {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .record-chip.medication { background: var(--c-green-soft); color: var(--c-green-text); }
+  .record-chip.no-medication { background: var(--c-red-soft); color: var(--c-red-text); }
+  .record-chip.time { background: rgba(45,184,122,0.08); color: var(--c-primary); }
+  .record-pulse {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-teal);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    color: var(--c-primary);
+    opacity: 0.6;
+  }
+  .empty-state svg { width: 52px; height: 52px; opacity: 0.4; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; font-weight: 500; }
+  .empty-state .empty-hint {
+    font-size: 12px;
+    color: var(--c-muted);
+    margin-top: 8px;
+    opacity: 0.8;
+  }
+
+  .bottom-actions {
+    flex-shrink: 0;
+    background: var(--c-glass2);
+    backdrop-filter: blur(30px);
+    padding: 14px 16px 16px;
+    box-shadow: 0 -6px 24px rgba(45,184,122,0.06);
+  }
+  .main-buttons { display: flex; gap: 10px; margin-bottom: 8px; }
+  .action-btn {
+    flex: 1;
+    min-height: 88px;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    font-family: var(--font);
+    touch-action: manipulation;
+  }
+  .action-btn:active { transform: translateY(2px) scale(0.97); }
+  .action-btn svg { width: 24px; height: 24px; }
+  .action-btn-text {
+    font-size: 13px;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .text-btn { background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary2) 100%); box-shadow: 0 6px 20px rgba(45,184,122,0.3); }
+  .quick-btn { background: linear-gradient(135deg, var(--c-teal) 0%, var(--c-teal2) 100%); box-shadow: 0 6px 20px rgba(62,198,176,0.3); }
+  .supplement-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent2) 100%);
+    border-radius: 14px;
+    text-align: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(245,166,35,0.25);
+    transition: all 0.2s;
+    font-family: var(--font);
+    letter-spacing: 0.5px;
+  }
+  .supplement-btn:active { transform: translateY(1px); }
+
+  /* ===== PAGE: 趋势 ===== */
+  .chart-header {
+    margin: 16px 16px 12px;
+  }
+  .chart-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .chart-tab {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(45,184,122,0.08);
+    color: var(--c-muted);
+  }
+  .chart-tab.active {
+    background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary2) 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(45,184,122,0.25);
+  }
+
+  .trend-insight {
+    background: linear-gradient(135deg, rgba(45,184,122,0.10), rgba(62,198,176,0.08));
+    border: 1px solid rgba(45,184,122,0.12);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .trend-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--c-dark);
+    margin-bottom: 4px;
+  }
+  .trend-subtitle {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--c-muted);
+    font-weight: 500;
+  }
+  .trend-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.78);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-green-text);
+  }
+
+  .trend-heatmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .heat-day {
+    height: 30px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(30,45,43,0.62);
+    border: 1px solid transparent;
+  }
+  .heat-day.normal { background: rgba(45,184,122,0.16); color: var(--c-green-text); }
+  .heat-day.warning { background: var(--c-amber-soft); color: var(--c-amber-text); }
+  .heat-day.danger { background: var(--c-red-soft); color: var(--c-red-text); }
+  .heat-day.missing {
+    background: rgba(107,138,130,0.06);
+    border-color: rgba(107,138,130,0.12);
+    color: rgba(107,138,130,0.45);
+  }
+
+  .chart-card {
+    margin: 0 16px 16px;
+    padding: 16px;
+  }
+  .chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .legend-dot.high { background: var(--c-red); }
+  .legend-dot.low { background: var(--c-primary); }
+  .legend-dot.pulse { background: var(--c-teal); }
+  .legend-dot.gap { background: none; border: 2px dashed var(--c-muted); opacity: 0.5; }
+  .legend-dot.normal { background: rgba(45,184,122,0.45); }
+  .legend-dot.warning { background: rgba(245,166,35,0.45); }
+  .legend-dot.danger { background: rgba(232,93,93,0.75); }
+  .legend-dot.missing { background: none; border: 2px dashed var(--c-muted); opacity: 0.45; }
+
+  .chart-canvas-wrap {
+    position: relative;
+    height: 250px;
+    margin-bottom: 12px;
+  }
+  #chart-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 触摸提示气泡 */
+  .chart-tooltip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(30,45,43,0.9);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.6;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+  }
+  .chart-tooltip.show { opacity: 1; }
+
+  .chart-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(45,184,122,0.08);
+  }
+  .stat-item { text-align: center; }
+  .stat-label { font-size: 11px; color: var(--c-muted); font-weight: 600; margin-bottom: 4px; }
+  .stat-value { font-size: 16px; font-weight: 800; }
+  .stat-value.high { color: var(--c-red); }
+  .stat-value.low { color: var(--c-primary); }
+  .stat-value.pulse { color: var(--c-teal); }
+
+  .list-wrap { padding: 0 16px calc(var(--tab-h) + var(--safe-bottom) + 20px); }
+
+  /* ===== PAGE: 历史 ===== */
+  .history-filter {
+    margin: 16px 16px 12px;
+    padding: 16px 18px;
+  }
+  .quick-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .quick-filter-btn {
+    padding: 6px 14px;
+    border: 1.5px solid rgba(45,184,122,0.2);
+    border-radius: 20px;
+    background: #f4f9f6;
+    color: var(--c-primary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+  }
+  .quick-filter-btn:active { transform: scale(0.96); }
+  .quick-filter-btn.active {
+    background: var(--c-primary);
+    color: #fff;
+    border-color: var(--c-primary);
+  }
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-row .input-field {
+    flex: 1;
+    min-width: 100px;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+  .filter-sep { font-size: 13px; color: var(--c-primary); font-weight: 600; }
+  .filter-row .btn { padding: 9px 16px; flex-shrink: 0; font-size: 13px; }
+
+  .history-list-wrap { padding: 0 16px calc(var(--tab-h) + var(--safe-bottom) + 60px); }
+  .history-item {
+    background: var(--c-glass);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    border-radius: 14px;
+    display: flex;
+    align-items: flex-start;
+    box-shadow: 0 3px 14px rgba(45,184,122,0.05);
+    gap: 12px;
+    animation: slideUp 0.15s ease both;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .history-item:active { transform: scale(0.99); }
+  .hi-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .hi-status-dot.normal { background: var(--c-green); }
+  .hi-status-dot.warning { background: var(--c-accent); }
+  .hi-status-dot.danger { background: var(--c-red); }
+  .hi-content { flex: 1; }
+  .hi-bp { font-size: 16px; font-weight: 800; color: var(--c-dark); margin-bottom: 4px; }
+  .hi-meta { font-size: 11px; color: var(--c-muted); display: flex; flex-wrap: wrap; gap: 8px; }
+  .hi-pulse { font-size: 14px; font-weight: 600; color: var(--c-teal); flex-shrink: 0; }
+
+  .history-summary {
+    position: fixed;
+    bottom: calc(var(--tab-h) + var(--safe-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--c-glass2);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    padding: 14px 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-dark);
+    box-shadow: 0 -6px 24px rgba(45,184,122,0.06);
+    border-top: 1px solid rgba(45,184,122,0.06);
+    z-index: 50;
+  }
+  .history-summary span { color: var(--c-primary); }
+
+  /* ===== PAGE: 设置 ===== */
+  #page-settings .page-scroll { padding: 20px 16px; }
+
+  .settings-section {
+    margin-bottom: 16px;
+  }
+  .settings-title {
+    font-size: 12px;
+    color: var(--c-primary);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  .settings-card {
+    padding: 0 20px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(45,184,122,0.06);
+    font-size: 14px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row-label { font-weight: 500; color: var(--c-dark); }
+  .info-row-value { font-weight: 600; color: var(--c-primary); }
+  .mini-link-btn {
+    border: none;
+    background: transparent;
+    color: var(--c-primary);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    padding: 4px;
+  }
+  .info-row-hint {
+    font-size: 11px;
+    color: var(--c-muted);
+    line-height: 1.5;
+    padding: 8px 0 16px;
+  }
+
+  .export-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px;
+  }
+  .export-actions .btn { width: 100%; padding: 14px; font-size: 15px; }
+
+  .backup-reminder {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--c-amber-soft);
+    border-radius: 10px;
+    margin: 0 16px 8px;
+    font-size: 12px;
+    color: var(--c-amber-text);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .backup-reminder svg { flex-shrink: 0; }
+
+  .danger-zone { margin-top: 24px; }
+  .danger-zone .btn-danger { width: 100%; padding: 14px; }
+
+  /* ===== MODAL ===== */
+  .input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .input-group {
+    flex: 1;
+    min-width: 0;
+  }
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-primary);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+  .input-group .input-field {
+    padding: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .input-group .input-field.high { color: var(--c-red); }
+  .input-group .input-field.low { color: var(--c-primary); }
+  .input-group .input-field.pulse { color: var(--c-teal); }
+  .input-group .input-field.optional { color: var(--c-muted); }
+  .input-group .optional-label { font-size: 10px; color: var(--c-muted); font-weight: 500; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px;
+    background: #f4f9f6;
+    border-radius: 10px;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--c-primary);
+    cursor: pointer;
+  }
+  .checkbox-row label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-dark);
+    cursor: pointer;
+  }
+
+  .time-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .time-input-wrap label {
+    font-size: 12px;
+    color: var(--c-muted);
+    font-weight: 600;
+  }
+  .time-input-wrap input[type="time"] {
+    flex: 1;
+    padding: 10px 12px;
+    border: 2px solid #dde9e3;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: var(--font);
+    color: var(--c-dark);
+    background: #f8faf9;
+    outline: none;
+  }
+  .time-input-wrap input[type="time"]:focus {
+    border-color: var(--c-primary);
+    background: #fff;
+  }
+
+  .note-input {
+    margin-top: 12px;
+  }
+  .note-input label {
+    display: block;
+    font-size: 11px;
+    color: var(--c-muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  input[type="date"].input-field, input[type="time"].input-field { cursor: pointer; }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+    filter: invert(50%) sepia(80%) saturate(500%) hue-rotate(100deg);
+  }
+
+  @media (min-width: 600px) {
+    #app { box-shadow: 0 0 120px rgba(45,184,122,0.10); }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ======================== PAGE: 首页 ======================== -->
+  <div id="page-index" class="page active">
+    <div class="index-header">
+      <div class="index-brand">安康血压记录</div>
+      <div class="index-date" id="idx-date"></div>
+    </div>
+
+    <div class="page-scroll">
+      <div class="overview-card card press-safe">
+        <div class="overview-grid">
+          <div class="overview-item">
+            <div class="overview-label">高压</div>
+            <div class="overview-value high" id="overview-high">--</div>
+            <div class="overview-unit">mmHg</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">低压</div>
+            <div class="overview-value low" id="overview-low">--</div>
+            <div class="overview-unit">mmHg</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-label">脉搏</div>
+            <div class="overview-value pulse" id="overview-pulse">--</div>
+            <div class="overview-unit">次/分</div>
+          </div>
+        </div>
+        <div class="overview-status normal" id="overview-status">
+          <span id="overview-status-icon">✓</span>
+          <span id="overview-status-text">暂无数据</span>
+        </div>
+        <div class="overview-time" id="overview-time"></div>
+        <div class="overview-avg" id="overview-avg" style="display:none"></div>
+      </div>
+
+      <div class="today-list-wrap">
+        <div class="section-label">今日记录</div>
+        <div id="today-records"></div>
+      </div>
+    </div>
+
+    <div class="bottom-actions press-safe">
+      <div class="main-buttons">
+        <button class="action-btn quick-btn" onclick="showModal('quick')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span class="action-btn-text">快捷记录</span>
+        </button>
+        <button class="action-btn text-btn" onclick="showModal('text')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          <span class="action-btn-text">手动填写</span>
+        </button>
+      </div>
+      <button class="supplement-btn" onclick="showModal('supplement')">补录历史记录</button>
+    </div>
+  </div>
+
+  <!-- ======================== PAGE: 趋势 ======================== -->
+  <div id="page-chart" class="page">
+    <div class="page-scroll">
+      <div class="chart-header card press-safe">
+        <div class="chart-tabs">
+          <button class="chart-tab active" data-period="day" onclick="switchChartPeriod('day')">近7天</button>
+          <button class="chart-tab" data-period="week" onclick="switchChartPeriod('week')">近30天</button>
+          <button class="chart-tab" data-period="range" onclick="switchChartPeriod('range')">自定义</button>
+        </div>
+        <div id="chart-range-picker" style="display:none;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <input type="date" class="input-field" id="chart-range-start" style="flex:1;min-width:120px;padding:9px 12px;font-size:13px" onchange="applyChartRange()" />
+            <span style="font-size:13px;color:var(--c-primary);font-weight:600;flex-shrink:0">至</span>
+            <input type="date" class="input-field" id="chart-range-end" style="flex:1;min-width:120px;padding:9px 12px;font-size:13px" onchange="applyChartRange()" />
+          </div>
+          <div id="chart-range-hint" style="font-size:11px;color:var(--c-muted);margin-top:6px;text-align:center"></div>
+        </div>
+        <div class="trend-insight" id="trend-insight"></div>
+        <div class="trend-heatmap" id="trend-heatmap"></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot normal"></div><span>正常</span></div>
+          <div class="legend-item"><div class="legend-dot warning"></div><span>临界</span></div>
+          <div class="legend-item"><div class="legend-dot danger"></div><span>偏高</span></div>
+          <div class="legend-item"><div class="legend-dot missing"></div><span>未测量</span></div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot high"></div><span>高压</span></div>
+          <div class="legend-item"><div class="legend-dot low"></div><span>低压</span></div>
+          <div class="legend-item"><div class="legend-dot pulse"></div><span>脉搏</span></div>
+          <div class="legend-item"><div class="legend-dot gap"></div><span>未测量</span></div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="chart-canvas"></canvas>
+          <div class="chart-tooltip" id="chart-tooltip"></div>
+        </div>
+        <div class="chart-stats" id="chart-stats"></div>
+      </div>
+
+      <div class="list-wrap">
+        <div class="section-label">趋势记录</div>
+        <div id="chart-records"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== PAGE: 历史 ======================== -->
+  <div id="page-history" class="page">
+    <div class="page-scroll">
+      <div class="history-filter card press-safe">
+        <div class="quick-filters">
+          <button class="quick-filter-btn active" data-range="7" onclick="setHistoryRange(7)">近7天</button>
+          <button class="quick-filter-btn" data-range="30" onclick="setHistoryRange(30)">近30天</button>
+          <button class="quick-filter-btn" data-range="90" onclick="setHistoryRange(90)">近3个月</button>
+          <button class="quick-filter-btn" data-range="0" onclick="setHistoryRange(0)">全部</button>
+        </div>
+        <div class="filter-row">
+          <input type="date" class="input-field" id="hist-start" />
+          <span class="filter-sep">至</span>
+          <input type="date" class="input-field" id="hist-end" />
+          <button class="btn btn-primary" onclick="searchHistory()">查询</button>
+        </div>
+      </div>
+      <div class="history-list-wrap" id="history-list"></div>
+    </div>
+    <div class="history-summary" id="history-summary" style="display:none">
+      共 <span id="hist-count">0</span> 条，平均高压 <span id="hist-avg-high">--</span>，平均低压 <span id="hist-avg-low">--</span>
+    </div>
+  </div>
+
+  <!-- ======================== PAGE: 设置 ======================== -->
+  <div id="page-settings" class="page">
+    <div class="page-scroll">
+      <div class="settings-section">
+        <div class="settings-title">判定标准</div>
+        <div class="card settings-card">
+          <div class="info-row">
+            <span class="info-row-label">单次偏高提醒</span>
+            <span class="info-row-value"><span id="standard-high-display">≥140 / 90</span>　<button class="mini-link-btn" onclick="showStandardEditor()">自定义</button></span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label">家庭均值关注</span>
+            <span class="info-row-value">≥135 / 85</span>
+          </div>
+          <div class="info-row-hint">本工具只做记录和趋势提醒，不替代医生诊断。不同人群、年龄、基础病和用药情况不同，请以医生建议为准。</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">数据管理</div>
+        <div class="backup-reminder" style="display:flex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>数据仅保存在当前手机浏览器中。清理浏览器数据、换手机或更换浏览器可能导致记录丢失，请定期备份。</span>
+        </div>
+        <div class="backup-reminder" id="backup-reminder" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span>您已超过 7 天未备份数据，建议及时备份以防丢失</span>
+        </div>
+        <div class="card settings-card">
+          <div class="export-actions">
+            <button class="btn btn-teal" onclick="exportJSON()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;margin-right:6px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              备份数据
+            </button>
+            <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;margin-right:6px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              从备份恢复
+            </button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)" />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">安装与反馈</div>
+        <div class="card settings-card">
+          <div class="export-actions">
+            <button class="btn btn-primary" onclick="installApp()">添加到桌面 / 主屏幕</button>
+            <button class="btn btn-ghost" onclick="copyAppLink()">复制网址</button>
+            <button class="btn btn-teal" onclick="openFeedback()">意见反馈</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section" id="admin-demo-section" style="display:none">
+        <div class="settings-title">管理员演示工具</div>
+        <div class="card settings-card">
+          <div class="info-row">
+            <span class="info-row-label">模拟数据</span>
+            <span class="info-row-value" id="mock-count">0 条</span>
+          </div>
+          <div class="info-row-hint">只在当前浏览器生成，用于查看趋势效果；清除时只删除模拟数据，不影响真实记录。</div>
+          <div class="export-actions">
+            <button class="btn btn-primary" onclick="seedMockMonthData()">生成一个月模拟数据</button>
+            <button class="btn btn-ghost" onclick="clearMockData()">清除模拟数据</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section danger-zone">
+        <div class="settings-title" style="color:var(--c-red)">危险操作</div>
+        <div class="card settings-card">
+          <div class="info-row">
+            <span class="info-row-label">记录总数</span>
+            <span class="info-row-value" id="total-count">0 条</span>
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn btn-danger" onclick="clearAllRecords()">清空所有记录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB BAR ======================== -->
+  <div class="tabbar">
+    <div class="tab-item active" id="tab-index" onclick="switchTab('index')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor"/>
+      </svg>
+      <span>首页</span>
+    </div>
+    <div class="tab-item" id="tab-chart" onclick="switchTab('chart')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span>趋势</span>
+    </div>
+    <div class="tab-item" id="tab-history" onclick="switchTab('history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9" stroke="currentColor"/>
+        <polyline points="12 7 12 12 15 15" stroke="currentColor"/>
+      </svg>
+      <span>历史</span>
+    </div>
+    <div class="tab-item" id="tab-settings" onclick="switchTab('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" stroke="currentColor"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor"/>
+      </svg>
+      <span>设置</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== MODALS ======================== -->
+<!-- 手动填写 Modal -->
+<div class="modal-overlay" id="modal-text" style="display:none" onclick="if(event.target===this)hideModal('text')">
+  <div class="modal-box">
+    <div class="modal-title">手动填写</div>
+    <div class="modal-subtitle">输入测量数据</div>
+    
+    <div class="input-row">
+      <div class="input-group">
+        <label>高压 (mmHg)</label>
+        <input type="number" class="input-field high" id="input-high" placeholder="120" min="60" max="250" />
+      </div>
+      <div class="input-group">
+        <label>低压 (mmHg)</label>
+        <input type="number" class="input-field low" id="input-low" placeholder="80" min="40" max="150" />
+      </div>
+      <div class="input-group">
+        <label>脉搏 <span class="optional-label">(选填)</span></label>
+        <input type="number" class="input-field pulse optional" id="input-pulse" placeholder="72" min="40" max="200" />
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="input-medication" checked />
+      <label for="input-medication">已服用降压药</label>
+    </div>
+    <div class="time-input-wrap">
+      <label>测量时间</label>
+      <input type="time" id="input-time" />
+    </div>
+    <div class="note-input">
+      <label>备注（可选）</label>
+      <input type="text" class="input-field" id="input-note" placeholder="如：头晕、失眠" maxlength="50" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="hideModal('text')">取消</button>
+      <button class="btn btn-primary" onclick="submitText()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 快捷记录 Modal -->
+<div class="modal-overlay" id="modal-quick" style="display:none" onclick="if(event.target===this)hideModal('quick')">
+  <div class="modal-box">
+    <div class="modal-title">快捷记录</div>
+    <div class="modal-subtitle">空格分隔，或粘贴语音转文字内容</div>
+    
+    <textarea class="textarea-field" id="quick-input" placeholder="125 80 72 或粘贴语音识别内容" maxlength="50" oninput="autoParseQuickInput()"></textarea>
+    <div class="quick-parse-hint" id="quick-parse-hint" style="font-size:12px;color:var(--c-muted);margin-bottom:12px;min-height:18px"></div>
+    
+    <div class="input-row">
+      <div class="input-group">
+        <label>高压</label>
+        <input type="number" class="input-field high" id="quick-high" placeholder="120" />
+      </div>
+      <div class="input-group">
+        <label>低压</label>
+        <input type="number" class="input-field low" id="quick-low" placeholder="80" />
+      </div>
+      <div class="input-group">
+        <label>脉搏 <span class="optional-label">(选填)</span></label>
+        <input type="number" class="input-field pulse optional" id="quick-pulse" placeholder="72" />
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="quick-medication" checked />
+      <label for="quick-medication">已服用降压药</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="hideModal('quick')">取消</button>
+      <button class="btn btn-primary" onclick="submitQuick()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 补录 Modal -->
+<div class="modal-overlay" id="modal-supplement" style="display:none" onclick="if(event.target===this)hideModal('supplement')">
+  <div class="modal-box">
+    <div class="modal-title">补录历史记录</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:700;color:var(--c-primary);margin-bottom:6px;display:block">日期</label>
+      <input type="date" class="input-field" id="supp-date" />
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:700;color:var(--c-primary);margin-bottom:6px;display:block">时间</label>
+      <input type="time" class="input-field" id="supp-time" />
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>高压</label>
+        <input type="number" class="input-field high" id="supp-high" placeholder="120" />
+      </div>
+      <div class="input-group">
+        <label>低压</label>
+        <input type="number" class="input-field low" id="supp-low" placeholder="80" />
+      </div>
+      <div class="input-group">
+        <label>脉搏 <span class="optional-label">(选填)</span></label>
+        <input type="number" class="input-field pulse optional" id="supp-pulse" placeholder="72" />
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="supp-medication" checked />
+      <label for="supp-medication">已服用降压药</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="hideModal('supplement')">取消</button>
+      <button class="btn btn-primary" onclick="submitSupplement()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑记录 Modal -->
+<div class="modal-overlay" id="modal-edit" style="display:none" onclick="if(event.target===this)hideModal('edit')">
+  <div class="modal-box">
+    <div class="modal-title">编辑记录</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>高压</label>
+        <input type="number" class="input-field high" id="edit-high" />
+      </div>
+      <div class="input-group">
+        <label>低压</label>
+        <input type="number" class="input-field low" id="edit-low" />
+      </div>
+      <div class="input-group">
+        <label>脉搏 <span class="optional-label">(选填)</span></label>
+        <input type="number" class="input-field pulse optional" id="edit-pulse" />
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="edit-medication" />
+      <label for="edit-medication">已服用降压药</label>
+    </div>
+    <div class="time-input-wrap">
+      <label>时间</label>
+      <input type="time" id="edit-time" />
+    </div>
+    <div class="note-input">
+      <label>备注</label>
+      <input type="text" class="input-field" id="edit-note" placeholder="备注" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="deleteRecord()" style="margin-right:auto">删除</button>
+      <button class="btn btn-ghost" onclick="hideModal('edit')">取消</button>
+      <button class="btn btn-primary" onclick="saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 意见反馈 Modal -->
+<div class="modal-overlay" id="modal-feedback" style="display:none" onclick="if(event.target===this)hideModal('feedback')">
+  <div class="modal-box">
+    <div class="modal-title">意见反馈</div>
+    <div class="modal-subtitle">欢迎告诉我们你的建议或遇到的问题。</div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:700;color:var(--c-primary);margin-bottom:6px;display:block">反馈类型</label>
+      <select class="input-field" id="feedback-type">
+        <option value="功能建议">功能建议</option>
+        <option value="问题反馈">问题反馈</option>
+        <option value="使用咨询">使用咨询</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div class="note-input">
+      <label>反馈内容</label>
+      <textarea class="textarea-field" id="feedback-content" placeholder="请描述你的建议或遇到的问题" maxlength="1000"></textarea>
+    </div>
+    <div class="note-input">
+      <label>联系方式（选填）</label>
+      <input type="text" class="input-field" id="feedback-contact" placeholder="微信 / 手机 / 邮箱，便于回复" maxlength="120" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="hideModal('feedback')">取消</button>
+      <button class="btn btn-primary" onclick="submitFeedback()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认 Modal -->
+<div class="modal-overlay" id="modal-confirm" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title" id="confirm-title">确认操作</div>
+    <p style="font-size:14px;color:#555;text-align:center;line-height:1.6" id="confirm-content"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirm-cancel-btn">取消</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // 部署时配置 Worker API 根地址，例如 https://api.ankang.site
+  window.ANKANG_API_BASE = window.ANKANG_API_BASE || ''
+</script>
+<script src="./app-logic.js"></script>
+<script>
+// ============================================================
+//  DATA LAYER
+// ============================================================
+const DB_KEY = 'bp_records_v1'
+const BACKUP_KEY = 'bp_last_backup_v1'
+const SESSION_KEY = 'bp_anon_session_v1'
+const ADMIN_KEY = 'bp_admin_enabled_v1'
+const LOCAL_NOTICE_KEY = 'bp_local_notice_seen_v1'
+const STANDARD_KEY = 'bp_standard_v1'
+const PUBLIC_APP_URL = 'https://www.ankang.site'
+const APP_VERSION = '1.4.0'
+const API_BASE = (window.ANKANG_API_BASE || '').replace(/\/$/, '')
+let deferredInstallPrompt = null
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || [] } catch { return [] }
+}
+function saveData(arr) {
+  localStorage.setItem(DB_KEY, JSON.stringify(arr))
+}
+function getStandards() {
+  const defaults = { high: 140, low: 90, pulse: 100 }
+  try {
+    const saved = JSON.parse(localStorage.getItem(STANDARD_KEY)) || {}
+    return {
+      high: saved.high || defaults.high,
+      low: saved.low || defaults.low,
+      pulse: defaults.pulse,
+    }
+  } catch {
+    return defaults
+  }
+}
+function saveStandards(standards) {
+  localStorage.setItem(STANDARD_KEY, JSON.stringify({
+    high: standards.high,
+    low: standards.low,
+  }))
+}
+function recordBackupTime() {
+  localStorage.setItem(BACKUP_KEY, new Date().toISOString())
+}
+function getLastBackupTime() {
+  return localStorage.getItem(BACKUP_KEY) || null
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+}
+
+function getAnonSessionId() {
+  let id = localStorage.getItem(SESSION_KEY)
+  if (!id) {
+    id = genId()
+    localStorage.setItem(SESSION_KEY, id)
+  }
+  return id
+}
+
+function isLocalAdminMode() {
+  const params = new URLSearchParams(location.search)
+  if (params.get('admin') === '1') {
+    localStorage.setItem(ADMIN_KEY, '1')
+    return true
+  }
+  return localStorage.getItem(ADMIN_KEY) === '1'
+}
+
+function trackEvent(event, meta = {}) {
+  if (!window.AnkangLogic || !API_BASE) return
+  const payload = window.AnkangLogic.buildAnonymousAnalyticsPayload(event, meta, {
+    sessionId: getAnonSessionId(),
+    appVersion: APP_VERSION,
+  })
+  const body = JSON.stringify(payload)
+  const endpoint = API_BASE + '/collect'
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }))
+      return
+    }
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => {})
+  } catch (err) {}
+}
+
+function getInstallGuide() {
+  const ua = navigator.userAgent || ''
+  const isIOS = /iphone|ipad|ipod/i.test(ua)
+  const isHuawei = /huawei|honor|harmony/i.test(ua)
+  const isWechat = /micromessenger/i.test(ua)
+  const isFeishu = /lark|feishu/i.test(ua)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+
+  if (isStandalone) return '当前已经以桌面应用方式打开。'
+  if (isWechat || isFeishu) return '当前可能在微信、飞书等内置浏览器中。请点击右上角菜单，选择“在浏览器打开”，再添加到桌面。'
+  if (isIOS) return 'iPhone/iPad：请用 Safari 打开本页面，点击底部分享按钮，选择“添加到主屏幕”。'
+  if (isHuawei) return '华为/荣耀：请用华为浏览器打开本页面，点击菜单，选择“添加到桌面”或“添加快捷方式”。如果没有该选项，请先复制网址，再在系统浏览器中打开。'
+  return '安卓：请用 Chrome、Edge 或系统浏览器打开本页面，点击浏览器菜单，选择“安装应用”“添加到主屏幕”或“添加快捷方式”。'
+}
+
+async function installApp() {
+  trackEvent('install_help', { action: 'open_install', page: currentTab })
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt()
+    const choice = await deferredInstallPrompt.userChoice.catch(() => null)
+    deferredInstallPrompt = null
+    trackEvent('install_help', { action: 'browser_prompt', page: currentTab, result: choice && choice.outcome ? choice.outcome : 'unknown' })
+    return
+  }
+  await showConfirm('添加到桌面', getInstallGuide(), '知道了', false)
+}
+
+function copyAppLink() {
+  const url = PUBLIC_APP_URL
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => showToast('网址已复制')).catch(() => showToast(url, 4000))
+  } else {
+    showToast(url, 4000)
+  }
+  trackEvent('install_help', { action: 'copy_link', page: currentTab })
+}
+
+async function openFeedback() {
+  document.getElementById('feedback-type').value = '功能建议'
+  document.getElementById('feedback-content').value = ''
+  document.getElementById('feedback-contact').value = ''
+  document.getElementById('modal-feedback').style.display = 'flex'
+  setTimeout(() => document.getElementById('feedback-content').focus(), 100)
+  trackEvent('feedback', { action: 'open_modal', page: currentTab })
+}
+
+async function submitFeedback() {
+  const content = document.getElementById('feedback-content').value.trim()
+  if (!content) { showToast('请填写反馈内容'); return }
+  if (!API_BASE) {
+    showToast('暂时无法提交，请稍后再试')
+    return
+  }
+
+  const payload = window.AnkangLogic.buildFeedbackPayload({
+    type: document.getElementById('feedback-type').value,
+    content,
+    contact: document.getElementById('feedback-contact').value.trim(),
+    page: currentTab,
+    device: getDeviceSummary(),
+  }, {
+    sessionId: getAnonSessionId(),
+    appVersion: APP_VERSION,
+  })
+
+  try {
+    const res = await fetch(API_BASE + '/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error('HTTP ' + res.status)
+    hideModal('feedback')
+    showToast('反馈已提交，感谢建议')
+    trackEvent('feedback', { action: 'submit_success', page: currentTab })
+  } catch (err) {
+    showToast('提交失败，请稍后再试')
+    trackEvent('feedback', { action: 'submit_fail', page: currentTab, result: 'network_error' })
+  }
+}
+
+function getDeviceSummary() {
+  const ua = navigator.userAgent || ''
+  if (/iphone|ipad|ipod/i.test(ua)) return 'iOS Safari/WebView'
+  if (/huawei|honor|harmony/i.test(ua)) return 'Huawei/Honor Android'
+  if (/android/i.test(ua)) return 'Android'
+  if (/micromessenger/i.test(ua)) return 'WeChat WebView'
+  return ua.slice(0, 120)
+}
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault()
+  deferredInstallPrompt = event
+})
+
+// ============================================================
+//  HELPERS - 中文数字解析
+// ============================================================
+function parseChineseNumber(str) {
+  // 处理「一百二十五」→ 125，「八十」→ 80，「十五」→ 15 等
+  const digitMap = { '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 }
+
+  if (!/^[零一二三四五六七八九十百千万]+$/.test(str)) return null
+
+  let result = 0
+  let current = 0
+
+  for (const char of str) {
+    if (char === '十') {
+      if (current === 0) current = 1
+      result += current * 10
+      current = 0
+    } else if (char === '百') {
+      if (current === 0) current = 1
+      result += current * 100
+      current = 0
+    } else if (char === '千') {
+      if (current === 0) current = 1
+      result += current * 1000
+      current = 0
+    } else if (char === '万') {
+      if (current === 0) current = 1
+      result = (result + current) * 10000
+      current = 0
+    } else {
+      current = digitMap[char] || 0
+    }
+  }
+
+  return result + current
+}
+
+function extractNumbers(text) {
+  const numbers = []
+  const seen = new Set()
+
+  // 先尝试匹配连续中文数字
+  const chineseRegex = /[零一二三四五六七八九十百千万]+/g
+  let match
+  while ((match = chineseRegex.exec(text)) !== null) {
+    const val = parseChineseNumber(match[0])
+    if (val !== null && val > 0 && !seen.has(val)) {
+      numbers.push(val)
+      seen.add(val)
+    }
+  }
+
+  // 阿拉伯数字
+  const arabicRegex = /(\d+(?:\.\d+)?)/g
+  while ((match = arabicRegex.exec(text)) !== null) {
+    const n = parseInt(match[1])
+    if (!isNaN(n) && n > 0 && !seen.has(n)) {
+      numbers.push(n)
+      seen.add(n)
+    }
+  }
+
+  return numbers
+}
+
+// 快捷记录的自动解析
+let quickParseTimer = null
+function autoParseQuickInput() {
+  clearTimeout(quickParseTimer)
+  quickParseTimer = setTimeout(() => {
+    const text = document.getElementById('quick-input').value.trim()
+    if (!text) {
+      document.getElementById('quick-parse-hint').textContent = ''
+      return
+    }
+
+    const numbers = extractNumbers(text)
+    if (numbers.length === 0) {
+      document.getElementById('quick-parse-hint').textContent = '未识别到数字，请手动输入'
+      return
+    }
+
+    let high = null, low = null, pulse = null
+    const candidates = numbers.filter(n => n >= 40 && n <= 250)
+
+    // 找高压低压对
+    for (let i = 0; i < candidates.length; i++) {
+      const n = candidates[i]
+      if (high === null && n >= 90 && n <= 200) {
+        for (let j = i + 1; j < candidates.length; j++) {
+          if (candidates[j] >= 50 && candidates[j] <= 130 && candidates[j] < n) {
+            high = n
+            low = candidates[j]
+            break
+          }
+        }
+        if (high === null) {
+          high = n
+        }
+      }
+    }
+
+    if (low === null && high !== null) {
+      const lows = candidates.filter(n => n < high && n >= 50 && n <= 130)
+      if (lows.length > 0) low = lows[0]
+    }
+
+    // 脉搏识别（范围更宽：40-120）
+    for (const n of candidates) {
+      if (n >= 40 && n <= 120 && n !== high && n !== low) {
+        if (pulse === null) pulse = n
+      }
+    }
+
+    if (high !== null) document.getElementById('quick-high').value = high
+    if (low !== null) document.getElementById('quick-low').value = low
+    if (pulse !== null) document.getElementById('quick-pulse').value = pulse
+
+    const hintEl = document.getElementById('quick-parse-hint')
+    if (high !== null || low !== null || pulse !== null) {
+      hintEl.innerHTML = `已识别：<span style="color:var(--c-red)">${high || '--'}</span> / <span style="color:var(--c-primary)">${low || '--'}</span> / <span style="color:var(--c-teal)">${pulse || '--'}</span>（可修改）`
+    }
+  }, 300)
+}
+
+function formatDate(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth()+1).padStart(2,'0')
+  const d = String(date.getDate()).padStart(2,'0')
+  return `${y}-${m}-${d}`
+}
+
+function formatTime(date) {
+  const h = String(date.getHours()).padStart(2,'0')
+  const m = String(date.getMinutes()).padStart(2,'0')
+  return `${h}:${m}`
+}
+
+function getBPStatus(high, low) {
+  if (window.AnkangLogic) return window.AnkangLogic.getBPStatus(high, low)
+  const targets = getStandards()
+  if (high >= targets.high || low >= targets.low) return 'danger'
+  if (high >= targets.high - 10 || low >= targets.low - 10) return 'warning'
+  return 'normal'
+}
+
+let toastTimer = null
+function showToast(msg, duration = 2200) {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.classList.add('show')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('show'), duration)
+}
+
+// Confirm dialog
+let confirmResolve = null
+function showConfirm(title, content, okText = '确认', dangerOk = true) {
+  return new Promise(resolve => {
+    confirmResolve = resolve
+    document.getElementById('confirm-title').textContent = title
+    document.getElementById('confirm-content').textContent = content
+    const okBtn = document.getElementById('confirm-ok-btn')
+    okBtn.textContent = okText
+    okBtn.className = 'btn ' + (dangerOk ? 'btn-danger' : 'btn-primary')
+    document.getElementById('modal-confirm').style.display = 'flex'
+  })
+}
+document.getElementById('confirm-ok-btn').onclick = () => {
+  document.getElementById('modal-confirm').style.display = 'none'
+  if (confirmResolve) confirmResolve(true)
+}
+document.getElementById('confirm-cancel-btn').onclick = () => {
+  document.getElementById('modal-confirm').style.display = 'none'
+  if (confirmResolve) confirmResolve(false)
+}
+
+function showLocalStorageReminderOnce() {
+  if (localStorage.getItem(LOCAL_NOTICE_KEY) === '1') return
+  localStorage.setItem(LOCAL_NOTICE_KEY, '1')
+  setTimeout(() => {
+    showConfirm(
+      '本地存储提醒',
+      '血压记录仅保存在当前手机浏览器中。清理浏览器数据、换手机或更换浏览器可能导致记录丢失，请定期在设置页备份。',
+      '知道了',
+      false,
+    )
+  }, 600)
+}
+
+// ============================================================
+//  TAB NAVIGATION
+// ============================================================
+let currentTab = 'index'
+function switchTab(name) {
+  if (currentTab === name) return
+
+  const currentPage = document.getElementById('page-' + currentTab)
+  const currentTabEl = document.getElementById('tab-' + currentTab)
+  if (currentPage) currentPage.classList.remove('active')
+  if (currentTabEl) currentTabEl.classList.remove('active')
+
+  const newPage = document.getElementById('page-' + name)
+  const newTabEl = document.getElementById('tab-' + name)
+  if (newPage) newPage.classList.add('active')
+  if (newTabEl) newTabEl.classList.add('active')
+
+  currentTab = name
+
+  document.querySelectorAll('.tab-item').forEach(el => {
+    const isActive = el.id === 'tab-' + name
+    el.querySelectorAll('svg *').forEach(s => {
+      s.setAttribute('stroke', isActive ? '#2db87a' : '#bbb')
+    })
+  })
+
+  if (name === 'index') loadIndexPage()
+  if (name === 'chart') loadChartPage()
+  if (name === 'history') initHistoryPage()
+  if (name === 'settings') loadSettingsPage()
+  trackEvent('page_view', { page: name })
+}
+
+// ============================================================
+//  PAGE: 首页
+// ============================================================
+function loadIndexPage() {
+  document.getElementById('idx-date').textContent = formatDate(new Date())
+  loadTodayRecords()
+  loadOverview()
+}
+
+function loadOverview() {
+  const data = loadData()
+  const today = formatDate(new Date())
+  const todayRecords = data.filter(r => r.date === today)
+
+  if (todayRecords.length === 0) {
+    document.getElementById('overview-high').textContent = '--'
+    document.getElementById('overview-low').textContent = '--'
+    document.getElementById('overview-pulse').textContent = '--'
+    document.getElementById('overview-status').className = 'overview-status normal'
+    document.getElementById('overview-status').innerHTML = '<span>🌱</span><span>今天还没量血压哦，记得测量~</span>'
+    document.getElementById('overview-time').textContent = ''
+    document.getElementById('overview-avg').style.display = 'none'
+    return
+  }
+
+  // Get latest record
+  const latest = [...todayRecords].sort((a, b) => {
+    const timeA = a.date + ' ' + (a.time || '00:00')
+    const timeB = b.date + ' ' + (b.time || '00:00')
+    return timeB.localeCompare(timeA)
+  })[0]
+
+  document.getElementById('overview-high').textContent = latest.high
+  document.getElementById('overview-low').textContent = latest.low
+  document.getElementById('overview-pulse').textContent = latest.pulse || '--'
+
+  const status = getBPStatus(latest.high, latest.low)
+  const statusEl = document.getElementById('overview-status')
+  statusEl.className = 'overview-status ' + status
+
+  if (status === 'danger') {
+    statusEl.innerHTML = '<span>⚠️</span><span>血压偏高，请注意</span>'
+  } else if (status === 'warning') {
+    statusEl.innerHTML = '<span>⚡</span><span>血压临界，注意监测</span>'
+  } else {
+    statusEl.innerHTML = '<span>✓</span><span>血压正常</span>'
+  }
+
+  document.getElementById('overview-time').textContent = latest.time ? `最近测量 ${latest.time}` : ''
+
+  // 今日均值（多次测量时显示）
+  const avgEl = document.getElementById('overview-avg')
+  if (todayRecords.length > 1) {
+    const avgHigh = Math.round(todayRecords.reduce((s, r) => s + r.high, 0) / todayRecords.length)
+    const avgLow = Math.round(todayRecords.reduce((s, r) => s + r.low, 0) / todayRecords.length)
+    const pRecs = todayRecords.filter(r => r.pulse > 0)
+    const avgPulse = pRecs.length ? Math.round(pRecs.reduce((s, r) => s + r.pulse, 0) / pRecs.length) : '--'
+    avgEl.style.display = 'flex'
+    avgEl.innerHTML = `今日均值（${todayRecords.length}次）：<b>${avgHigh}/${avgLow}</b> mmHg　脉搏 <b>${avgPulse}</b> 次/分`
+  } else {
+    avgEl.style.display = 'none'
+  }
+}
+
+function loadTodayRecords() {
+  const today = formatDate(new Date())
+  const data = loadData().filter(r => r.date === today)
+    .sort((a, b) => {
+      const timeA = a.date + ' ' + (a.time || '00:00')
+      const timeB = b.date + ' ' + (b.time || '00:00')
+      return timeB.localeCompare(timeA)
+    })
+
+  const el = document.getElementById('today-records')
+  if (data.length === 0) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <p>今天还没有记录</p>
+      <p class="empty-hint">点击下方按钮开始记录吧</p>
+    </div>`
+    return
+  }
+
+  el.innerHTML = data.map((record, index) => {
+    const status = getBPStatus(record.high, record.low)
+    return `
+      <div class="record-item ${status} press-safe" onclick="showEditModal('${record._id}')" style="animation-delay:${index * 0.04}s">
+        <div class="record-content">
+          <div class="record-bp">${record.high} / ${record.low} mmHg</div>
+          <div class="record-meta">
+            <span class="record-chip ${record.medication ? 'medication' : 'no-medication'}">${record.medication ? '✓ 已服药' : '✗ 未服药'}</span>
+            <span class="record-chip time">${record.time || '00:00'}</span>
+            ${record.note ? `<span class="record-chip">${escHtml(record.note)}</span>` : ''}
+          </div>
+        </div>
+        <div class="record-pulse">${record.pulse || '--'}<br><span style="font-size:10px;font-weight:500">次/分</span></div>
+      </div>
+    `
+  }).join('')
+}
+
+// ============================================================
+//  MODALS
+// ============================================================
+function showModal(type) {
+  if (type === 'text') {
+    document.getElementById('input-time').value = formatTime(new Date())
+    document.getElementById('input-high').value = ''
+    document.getElementById('input-low').value = ''
+    document.getElementById('input-pulse').value = ''
+    document.getElementById('input-note').value = ''
+    document.getElementById('input-medication').checked = true
+    document.getElementById('modal-text').style.display = 'flex'
+    setTimeout(() => document.getElementById('input-high').focus(), 100)
+  } else if (type === 'quick') {
+    document.getElementById('quick-input').value = ''
+    document.getElementById('quick-high').value = ''
+    document.getElementById('quick-low').value = ''
+    document.getElementById('quick-pulse').value = ''
+    document.getElementById('quick-medication').checked = true
+    document.getElementById('quick-parse-hint').textContent = ''
+    document.getElementById('modal-quick').style.display = 'flex'
+    setTimeout(() => document.getElementById('quick-input').focus(), 100)
+  } else if (type === 'supplement') {
+    const now = new Date()
+    document.getElementById('supp-date').value = formatDate(now)
+    document.getElementById('supp-time').value = formatTime(now)
+    document.getElementById('supp-high').value = ''
+    document.getElementById('supp-low').value = ''
+    document.getElementById('supp-pulse').value = ''
+    document.getElementById('supp-medication').checked = true
+    document.getElementById('modal-supplement').style.display = 'flex'
+    setTimeout(() => document.getElementById('supp-high').focus(), 100)
+  }
+  trackEvent('action_click', { action: 'open_' + type, page: currentTab })
+}
+
+function hideModal(type) {
+  document.getElementById('modal-' + type).style.display = 'none'
+  if (type === 'edit') editingRecordId = null
+}
+
+function submitText() {
+  const high = parseInt(document.getElementById('input-high').value)
+  const low = parseInt(document.getElementById('input-low').value)
+  const pulseVal = document.getElementById('input-pulse').value
+  const pulse = pulseVal ? parseInt(pulseVal) : 0
+  const medication = document.getElementById('input-medication').checked
+  const time = document.getElementById('input-time').value
+  const note = document.getElementById('input-note').value.trim()
+
+  if (!high || high < 60 || high > 250) { showToast('请输入有效的高压值'); return }
+  if (!low || low < 40 || low > 150) { showToast('请输入有效的低压值'); return }
+  if (pulseVal && (pulse < 40 || pulse > 200)) { showToast('请输入有效的脉搏值'); return }
+
+  const record = window.AnkangLogic.normalizeRecord({
+    _id: genId(),
+    high,
+    low,
+    pulse,
+    medication,
+    date: formatDate(new Date()),
+    time: time || formatTime(new Date()),
+    note,
+    createTime: new Date().toISOString()
+  })
+
+  const data = loadData()
+  data.push(record)
+  saveData(data)
+
+  hideModal('text')
+  showToast('记录已保存')
+  trackEvent('record_save', { action: 'manual', page: currentTab, time_bucket: window.AnkangLogic.getTimeBucket(record.time) })
+  loadIndexPage()
+}
+
+function submitQuick() {
+  let high = parseInt(document.getElementById('quick-high').value)
+  let low = parseInt(document.getElementById('quick-low').value)
+  const pulseVal = document.getElementById('quick-pulse').value
+  let pulse = pulseVal ? parseInt(pulseVal) : 0
+
+  if (!high || !low) {
+    const input = document.getElementById('quick-input').value.trim()
+    if (input) {
+      const numbers = extractNumbers(input)
+      const candidates = numbers.filter(n => n >= 40 && n <= 250)
+      if (candidates.length >= 1 && !high) high = candidates[0]
+      if (candidates.length >= 2 && !low) {
+        const lows = candidates.filter(n => n < high && n >= 50 && n <= 130)
+        low = lows.length > 0 ? lows[0] : candidates[1]
+      }
+      if (candidates.length >= 3 && !pulse) pulse = candidates[2]
+    }
+  }
+
+  if (!high || high < 60 || high > 250) { showToast('请输入有效的高压值'); return }
+  if (!low || low < 40 || low > 150) { showToast('请输入有效的低压值'); return }
+  if (pulseVal && (pulse < 40 || pulse > 200)) { showToast('请输入有效的脉搏值'); return }
+
+  const medication = document.getElementById('quick-medication').checked
+
+  const record = window.AnkangLogic.normalizeRecord({
+    _id: genId(),
+    high,
+    low,
+    pulse: pulse || 0,
+    medication,
+    date: formatDate(new Date()),
+    time: formatTime(new Date()),
+    note: '',
+    createTime: new Date().toISOString()
+  })
+
+  const data = loadData()
+  data.push(record)
+  saveData(data)
+
+  hideModal('quick')
+  showToast('记录已保存')
+  trackEvent('record_save', { action: 'quick', page: currentTab, time_bucket: window.AnkangLogic.getTimeBucket(record.time) })
+  loadIndexPage()
+}
+
+function submitSupplement() {
+  const date = document.getElementById('supp-date').value
+  const time = document.getElementById('supp-time').value
+  const high = parseInt(document.getElementById('supp-high').value)
+  const low = parseInt(document.getElementById('supp-low').value)
+  const pulseVal = document.getElementById('supp-pulse').value
+  const pulse = pulseVal ? parseInt(pulseVal) : 0
+  const medication = document.getElementById('supp-medication').checked
+
+  if (!date) { showToast('请选择日期'); return }
+  if (!high || high < 60 || high > 250) { showToast('请输入有效的高压值'); return }
+  if (!low || low < 40 || low > 150) { showToast('请输入有效的低压值'); return }
+  if (pulseVal && (pulse < 40 || pulse > 200)) { showToast('请输入有效的脉搏值'); return }
+
+  const record = window.AnkangLogic.normalizeRecord({
+    _id: genId(),
+    high,
+    low,
+    pulse,
+    medication,
+    date,
+    time: time || '00:00',
+    note: '',
+    createTime: new Date().toISOString()
+  })
+
+  const data = loadData()
+  data.push(record)
+  saveData(data)
+
+  hideModal('supplement')
+  showToast('补录成功')
+  trackEvent('record_save', { action: 'supplement', page: currentTab, time_bucket: window.AnkangLogic.getTimeBucket(record.time) })
+  loadIndexPage()
+}
+
+// ============================================================
+//  EDIT RECORD
+// ============================================================
+let editingRecordId = null
+
+function showEditModal(id) {
+  const data = loadData()
+  const record = data.find(r => r._id === id)
+  if (!record) return
+
+  editingRecordId = id
+  document.getElementById('edit-high').value = record.high
+  document.getElementById('edit-low').value = record.low
+  document.getElementById('edit-pulse').value = record.pulse || ''
+  document.getElementById('edit-medication').checked = record.medication
+  document.getElementById('edit-time').value = record.time || '00:00'
+  document.getElementById('edit-note').value = record.note || ''
+
+  document.getElementById('modal-edit').style.display = 'flex'
+}
+
+function saveEdit() {
+  const high = parseInt(document.getElementById('edit-high').value)
+  const low = parseInt(document.getElementById('edit-low').value)
+  const pulseVal = document.getElementById('edit-pulse').value
+  const pulse = pulseVal ? parseInt(pulseVal) : 0
+  const medication = document.getElementById('edit-medication').checked
+  const time = document.getElementById('edit-time').value
+  const note = document.getElementById('edit-note').value.trim()
+
+  if (!high || !low) { showToast('请填写完整数据'); return }
+
+  const data = loadData()
+  const idx = data.findIndex(r => r._id === editingRecordId)
+  if (idx !== -1) {
+    data[idx].high = high
+    data[idx].low = low
+    data[idx].pulse = pulse
+    data[idx].medication = medication
+    data[idx].time = time
+    data[idx].note = note
+    data[idx].updateTime = new Date().toISOString()
+    data[idx].updatedAt = new Date().toISOString()
+    data[idx].syncStatus = data[idx].syncStatus || 'local-only'
+    saveData(data)
+    hideModal('edit')
+    showToast('已保存')
+    trackEvent('record_edit', { action: 'save_edit', page: currentTab })
+    loadIndexPage()
+    if (currentTab === 'chart') loadChartPage()
+    if (currentTab === 'history') searchHistory()
+  }
+}
+
+async function deleteRecord() {
+  const ok = await showConfirm('确认删除', '此记录将被永久删除，此操作不可恢复。', '删除', true)
+  if (!ok) return
+
+  const data = loadData()
+  const idx = data.findIndex(r => r._id === editingRecordId)
+  if (idx !== -1) {
+    data.splice(idx, 1)
+    saveData(data)
+    hideModal('edit')
+    showToast('已删除')
+    trackEvent('record_delete', { action: 'delete', page: currentTab })
+    loadIndexPage()
+    if (currentTab === 'chart') loadChartPage()
+    if (currentTab === 'history') searchHistory()
+  }
+}
+
+// ============================================================
+//  PAGE: 趋势 - 重构版
+// ============================================================
+let chartPeriod = 'day'
+let chartCanvas = null
+let chartCtx = null
+let chartRangeStart = ''
+let chartRangeEnd = ''
+let chartDataCache = [] // 缓存当前图表数据，用于触摸交互
+
+function loadChartPage() {
+  if (!chartCanvas) {
+    chartCanvas = document.getElementById('chart-canvas')
+    chartCtx = chartCanvas.getContext('2d')
+    // 绑定触摸/鼠标事件
+    setupChartInteraction()
+  }
+  if (chartPeriod === 'range' && !chartRangeStart) {
+    const today = formatDate(new Date())
+    const last30 = formatDate(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000))
+    chartRangeStart = last30
+    chartRangeEnd = today
+    document.getElementById('chart-range-start').value = chartRangeStart
+    document.getElementById('chart-range-end').value = chartRangeEnd
+  }
+  drawChart()
+  loadChartRecords()
+  trackEvent('trend_filter', { action: 'switch_period', page: currentTab, period })
+}
+
+function switchChartPeriod(period) {
+  chartPeriod = period
+  document.querySelectorAll('.chart-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.period === period)
+  })
+
+  const picker = document.getElementById('chart-range-picker')
+  if (period === 'range') {
+    picker.style.display = 'block'
+    if (!chartRangeStart) {
+      const today = formatDate(new Date())
+      const last30 = formatDate(new Date(Date.now() - 29 * 24 * 60 * 60 * 1000))
+      chartRangeStart = last30
+      chartRangeEnd = today
+    }
+    document.getElementById('chart-range-start').value = chartRangeStart
+    document.getElementById('chart-range-end').value = chartRangeEnd
+  } else {
+    picker.style.display = 'none'
+  }
+
+  drawChart()
+  loadChartRecords()
+}
+
+function applyChartRange() {
+  const startEl = document.getElementById('chart-range-start')
+  const endEl = document.getElementById('chart-range-end')
+  const start = startEl.value
+  const end = endEl.value
+
+  if (start && end) {
+    if (start > end) {
+      document.getElementById('chart-range-hint').textContent = '⚠ 开始日期不能晚于结束日期'
+      return
+    }
+    const days = Math.round((new Date(end) - new Date(start)) / (24 * 60 * 60 * 1000)) + 1
+    if (days > 180) {
+      document.getElementById('chart-range-hint').textContent = '⚠ 区间最多 180 天'
+      endEl.value = formatDate(new Date(new Date(start).getTime() + 179 * 24 * 60 * 60 * 1000))
+    } else {
+      document.getElementById('chart-range-hint').textContent = `共 ${days} 天`
+    }
+    chartRangeStart = startEl.value
+    chartRangeEnd = endEl.value
+    drawChart()
+    loadChartRecords()
+    trackEvent('trend_filter', { action: 'custom_range', page: currentTab, period: 'range' })
+  }
+}
+
+function getChartDateRange() {
+  const now = new Date()
+  if (chartPeriod === 'day') {
+    const start = new Date(now); start.setDate(start.getDate() - 6)
+    return { start, end: now }
+  }
+  if (chartPeriod === 'week') {
+    const start = new Date(now); start.setDate(start.getDate() - 29)
+    return { start, end: now }
+  }
+  if (chartPeriod === 'range' && chartRangeStart && chartRangeEnd) {
+    return { start: new Date(chartRangeStart), end: new Date(chartRangeEnd) }
+  }
+  // 默认7天
+  const start = new Date(now); start.setDate(start.getDate() - 6)
+  return { start, end: now }
+}
+
+function getChartData() {
+  return getChartModel().days
+}
+
+function getChartModel() {
+  const allData = loadData()
+  const { start, end } = getChartDateRange()
+  const startStr = formatDate(start)
+  const endStr = formatDate(end)
+  const label = chartPeriod === 'day' ? '近7天' : chartPeriod === 'week' ? '近30天' : '自定义区间'
+
+  return window.AnkangLogic.buildTrendModel(allData, {
+    start: startStr,
+    end: endStr,
+    targets: getStandards(),
+    periodLabel: label,
+  })
+}
+
+// 图表触摸交互
+let chartPointPositions = [] // 存储每个数据点的位置信息
+
+function setupChartInteraction() {
+  const canvas = chartCanvas
+  const tooltip = document.getElementById('chart-tooltip')
+
+  function handleMove(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+
+    // 找最近的数据点
+    let closest = null
+    let minDist = Infinity
+    for (const pt of chartPointPositions) {
+      const dist = Math.abs(pt.x - x)
+      if (dist < minDist && pt.hasData) {
+        minDist = dist
+        closest = pt
+      }
+    }
+
+    if (closest && minDist < 40) {
+      tooltip.classList.add('show')
+      tooltip.innerHTML = `<b>${closest.date}</b><br>平均 <span style="color:#e85d5d">${closest.high}</span> / <span style="color:#2db87a">${closest.low}</span>${closest.pulse ? '<br>脉搏 <span style="color:#3ec6b0">' + closest.pulse + '</span>' : ''}${closest.count > 1 ? '<br>当日 ' + closest.count + ' 次，最高 ' + closest.maxHigh : ''}`
+      // 定位气泡
+      let tipX = closest.x + 10
+      let tipY = Math.max(10, closest.highY - 50)
+      if (tipX + 140 > rect.width) tipX = closest.x - 150
+      tooltip.style.left = tipX + 'px'
+      tooltip.style.top = tipY + 'px'
+    } else {
+      tooltip.classList.remove('show')
+    }
+  }
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    handleMove(touch.clientX, touch.clientY)
+  }, { passive: false })
+
+  canvas.addEventListener('touchend', () => {
+    setTimeout(() => tooltip.classList.remove('show'), 1500)
+  })
+
+  canvas.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY))
+  canvas.addEventListener('mouseleave', () => tooltip.classList.remove('show'))
+}
+
+function renderTrendOverview(model) {
+  const summary = model.summary
+  const insightEl = document.getElementById('trend-insight')
+  const heatmapEl = document.getElementById('trend-heatmap')
+  const statsEl = document.getElementById('chart-stats')
+
+  const changeText = summary.change.high === null
+    ? '暂无上一周期对比'
+    : `较上一周期 ${summary.change.high > 0 ? '+' : ''}${summary.change.high} / ${summary.change.low > 0 ? '+' : ''}${summary.change.low}`
+
+  insightEl.innerHTML = `
+    <div class="trend-title">${summary.conclusion}</div>
+    <div class="trend-subtitle">
+      ${summary.dataDayCount} 天有记录，${summary.missingDayCount} 天未测量；${summary.riskDayCount} 天偏高，${summary.riskRecordCount} 条记录达到偏高阈值。
+    </div>
+    <div class="trend-delta">${changeText}</div>
+  `
+
+  heatmapEl.innerHTML = model.days.map(day => `
+    <div class="heat-day ${day.status}" title="${day.date}${day.hasData ? ` ${day.high}/${day.low}` : ' 未测量'}">
+      ${day.label.split('/')[1]}
+    </div>
+  `).join('')
+
+  if (summary.dataDayCount === 0) {
+    statsEl.innerHTML = ''
+    return
+  }
+
+  statsEl.innerHTML = `
+    <div class="stat-item">
+      <div class="stat-label">平均高压</div>
+      <div class="stat-value high">${summary.avgHigh}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">平均低压</div>
+      <div class="stat-value low">${summary.avgLow}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">平均脉搏</div>
+      <div class="stat-value pulse">${summary.avgPulse || '--'}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">最高高压</div>
+      <div class="stat-value high">${summary.maxHigh}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">偏高天数</div>
+      <div class="stat-value" style="color:var(--c-red)">${summary.riskDayCount}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">偏高记录</div>
+      <div class="stat-value" style="color:var(--c-red)">${summary.riskRecordCount}</div>
+    </div>
+  `
+}
+
+function drawChart() {
+  const canvas = chartCanvas
+  const ctx = chartCtx
+  const dpr = window.devicePixelRatio || 1
+
+  const rect = canvas.getBoundingClientRect()
+  canvas.width = rect.width * dpr
+  canvas.height = rect.height * dpr
+  ctx.scale(dpr, dpr)
+
+  const width = rect.width
+  const height = rect.height
+  const padding = { top: 24, right: 20, bottom: 34, left: 42 }
+
+  ctx.clearRect(0, 0, width, height)
+
+  const model = getChartModel()
+  const data = model.days
+  renderTrendOverview(model)
+  chartDataCache = data
+  chartPointPositions = []
+
+  // 仅使用有数据的点来计算Y轴范围
+  const dataPoints = data.filter(d => d.hasData)
+
+  if (dataPoints.length === 0) {
+    ctx.fillStyle = '#6b8a82'
+    ctx.font = '14px -apple-system, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('暂无数据，开始记录后即可查看趋势', width / 2, height / 2)
+    return
+  }
+
+  const targets = getStandards()
+  // Y轴范围：基于有数据点
+  const allValues = dataPoints.flatMap(d => d.pulse > 0 ? [d.high, d.low, d.pulse] : [d.high, d.low])
+  const minVal = Math.max(0, Math.min(...allValues) - 15)
+  const maxVal = Math.max(...allValues) + 10
+
+  const chartWidth = width - padding.left - padding.right
+  const chartHeight = height - padding.top - padding.bottom
+
+  // 坐标转换函数
+  const toX = i => padding.left + (chartWidth / Math.max(data.length - 1, 1)) * i
+  const toY = v => padding.top + chartHeight - ((v - minVal) / (maxVal - minVal)) * chartHeight
+
+  // Draw grid
+  ctx.strokeStyle = 'rgba(45, 184, 122, 0.06)'
+  ctx.lineWidth = 1
+  for (let i = 0; i <= 4; i++) {
+    const y = padding.top + (chartHeight / 4) * i
+    ctx.beginPath()
+    ctx.moveTo(padding.left, y)
+    ctx.lineTo(width - padding.right, y)
+    ctx.stroke()
+
+    const value = Math.round(maxVal - (maxVal - minVal) / 4 * i)
+    ctx.fillStyle = '#6b8a82'
+    ctx.font = '10px -apple-system, sans-serif'
+    ctx.textAlign = 'right'
+    ctx.fillText(value, padding.left - 5, y + 4)
+  }
+
+  // Draw fixed standard lines（单次偏高提醒线）
+  ctx.setLineDash([4, 4])
+  ctx.lineWidth = 1
+  if (targets.high <= maxVal && targets.high >= minVal) {
+    const targetHighY = toY(targets.high)
+    ctx.strokeStyle = 'rgba(232, 93, 93, 0.3)'
+    ctx.beginPath(); ctx.moveTo(padding.left, targetHighY); ctx.lineTo(width - padding.right, targetHighY); ctx.stroke()
+    ctx.fillStyle = 'rgba(232, 93, 93, 0.5)'
+    ctx.font = '9px -apple-system, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText('高压上限', padding.left + 2, targetHighY - 3)
+  }
+  if (targets.low <= maxVal && targets.low >= minVal) {
+    const targetLowY = toY(targets.low)
+    ctx.strokeStyle = 'rgba(45, 184, 122, 0.3)'
+    ctx.beginPath(); ctx.moveTo(padding.left, targetLowY); ctx.lineTo(width - padding.right, targetLowY); ctx.stroke()
+    ctx.fillStyle = 'rgba(45, 184, 122, 0.5)'
+    ctx.font = '9px -apple-system, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText('低压上限', padding.left + 2, targetLowY - 3)
+  }
+  ctx.setLineDash([])
+
+  // 构建有数据的点序列（用于画连续线段，跳过无数据天）
+  const highPoints = []
+  const lowPoints = []
+  const pulsePoints = []
+
+  data.forEach((d, i) => {
+    const x = toX(i)
+    if (d.hasData) {
+      highPoints.push({ x, y: toY(d.high), v: d.high })
+      lowPoints.push({ x, y: toY(d.low), v: d.low })
+      if (d.pulse > 0) pulsePoints.push({ x, y: toY(d.pulse), v: d.pulse })
+    }
+    // 存储位置供触摸交互用
+    chartPointPositions.push({
+      x, highY: d.hasData ? toY(d.high) : 0,
+      date: d.date, high: d.high, low: d.low, pulse: d.pulse,
+      count: d.count || 0,
+      maxHigh: d.maxHigh || d.high,
+      hasData: d.hasData
+    })
+  })
+
+  // Draw area fill between high and low (有数据的区间)
+  if (highPoints.length >= 2 && lowPoints.length >= 2) {
+    ctx.save()
+    ctx.beginPath()
+    highPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y))
+    for (let i = lowPoints.length - 1; i >= 0; i--) ctx.lineTo(lowPoints[i].x, lowPoints[i].y)
+    ctx.closePath()
+    ctx.fillStyle = 'rgba(45, 184, 122, 0.08)'
+    ctx.fill()
+    ctx.restore()
+  }
+
+  // Draw lines（高压和低压）
+  const drawLine = (pts, color, w = 2.5) => {
+    if (pts.length < 2) return
+    ctx.strokeStyle = color
+    ctx.lineWidth = w
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.beginPath()
+    ctx.moveTo(pts[0].x, pts[0].y)
+    pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y))
+    ctx.stroke()
+  }
+
+  drawLine(highPoints, '#e85d5d', 2.5)
+  drawLine(lowPoints, '#2db87a', 2.5)
+  if (pulsePoints.length >= 2) drawLine(pulsePoints, '#3ec6b0', 1.5)
+
+  // Draw dots
+  const drawDots = (pts, color, r = 3.5) => {
+    pts.forEach(p => {
+      ctx.fillStyle = color
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = '#fff'
+      ctx.lineWidth = 2
+      ctx.stroke()
+    })
+  }
+
+  drawDots(highPoints, '#e85d5d')
+  drawDots(lowPoints, '#2db87a')
+  if (pulsePoints.length > 0) drawDots(pulsePoints, '#3ec6b0', 2.5)
+
+  // Draw gap markers（无数据的天标记虚线圆）
+  data.forEach((d, i) => {
+    if (!d.hasData) {
+      const x = toX(i)
+      const y = chartHeight / 2 + padding.top
+      ctx.beginPath()
+      ctx.arc(x, y, 3, 0, Math.PI * 2)
+      ctx.strokeStyle = 'rgba(107,138,130,0.25)'
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([2, 2])
+      ctx.stroke()
+      ctx.setLineDash([])
+    }
+  })
+
+  // X-axis labels（智能间隔）
+  const maxLabels = 7
+  const step = Math.max(1, Math.ceil(data.length / maxLabels))
+  ctx.fillStyle = '#6b8a82'
+  ctx.font = '10px -apple-system, sans-serif'
+  ctx.textAlign = 'center'
+  data.forEach((d, i) => {
+    if (i % step === 0 || i === data.length - 1) {
+      ctx.fillStyle = d.hasData ? '#6b8a82' : 'rgba(107,138,130,0.4)'
+      ctx.fillText(d.label, toX(i), height - padding.bottom + 14)
+    }
+  })
+
+}
+
+function loadChartRecords() {
+  const model = getChartModel()
+  const data = model.days.filter(d => d.hasData)
+  const el = document.getElementById('chart-records')
+
+  if (data.length === 0) {
+    el.innerHTML = `<div class="empty-state"><p>暂无趋势数据</p></div>`
+    return
+  }
+
+  el.innerHTML = data.map((record, index) => {
+    const status = record.status
+    return `
+      <div class="history-item" style="animation-delay:${index * 0.03}s">
+        <div class="hi-status-dot ${status}"></div>
+        <div class="hi-content">
+          <div class="hi-bp">${record.high} / ${record.low} mmHg</div>
+          <div class="hi-meta">
+            <span>${record.date}</span>
+            <span style="color:var(--c-primary)">当日均值</span>
+            <span>${record.count} 次记录</span>
+            ${record.maxHigh > record.high ? `<span style="color:var(--c-red)">最高 ${record.maxHigh}</span>` : ''}
+          </div>
+        </div>
+        <div class="hi-pulse">${record.pulse > 0 ? record.pulse : '--'}<br><span style="font-size:10px;font-weight:500">次/分</span></div>
+      </div>
+    `
+  }).join('')
+}
+
+// ============================================================
+//  PAGE: 历史
+// ============================================================
+function initHistoryPage() {
+  const today = formatDate(new Date())
+  const last30 = formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+  const startEl = document.getElementById('hist-start')
+  const endEl = document.getElementById('hist-end')
+  if (!startEl.value) startEl.value = last30
+  if (!endEl.value) endEl.value = today
+  searchHistory()
+}
+
+function setHistoryRange(days) {
+  const today = formatDate(new Date())
+  const endEl = document.getElementById('hist-end')
+  const startEl = document.getElementById('hist-start')
+
+  endEl.value = today
+
+  if (days === 0) {
+    // 全部
+    const data = loadData()
+    if (data.length > 0) {
+      const dates = data.map(r => r.date).sort()
+      startEl.value = dates[0]
+    } else {
+      startEl.value = today
+    }
+  } else {
+    const start = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000)
+    startEl.value = formatDate(start)
+  }
+
+  // 更新快捷按钮状态
+  document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.range) === days)
+  })
+
+  searchHistory()
+}
+
+function searchHistory() {
+  const start = document.getElementById('hist-start').value
+  const end = document.getElementById('hist-end').value
+
+  if (!start || !end) {
+    renderHistoryList([])
+    document.getElementById('history-summary').style.display = 'none'
+    return
+  }
+  if (start > end) {
+    showToast('开始日期不能晚于结束日期')
+    return
+  }
+
+  const data = loadData().filter(r => r.date >= start && r.date <= end)
+    .sort((a, b) => {
+      const keyA = a.date + ' ' + (a.time || '00:00')
+      const keyB = b.date + ' ' + (b.time || '00:00')
+      return keyB.localeCompare(keyA)
+    })
+
+  renderHistoryList(data)
+
+  const summaryEl = document.getElementById('history-summary')
+  if (data.length > 0) {
+    summaryEl.style.display = 'block'
+    document.getElementById('hist-count').textContent = data.length
+    const avgHigh = Math.round(data.reduce((s, r) => s + r.high, 0) / data.length)
+    const avgLow = Math.round(data.reduce((s, r) => s + r.low, 0) / data.length)
+    document.getElementById('hist-avg-high').textContent = avgHigh
+    document.getElementById('hist-avg-low').textContent = avgLow
+  } else {
+    summaryEl.style.display = 'none'
+  }
+}
+
+function renderHistoryList(records) {
+  const el = document.getElementById('history-list')
+
+  if (records.length === 0) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
+      </svg>
+      <p>暂无历史记录</p>
+    </div>`
+    return
+  }
+
+  el.innerHTML = records.map((record, index) => {
+    const status = getBPStatus(record.high, record.low)
+    return `
+      <div class="history-item" onclick="showEditModal('${record._id}')" style="animation-delay:${index * 0.03}s">
+        <div class="hi-status-dot ${status}"></div>
+        <div class="hi-content">
+          <div class="hi-bp">${record.high} / ${record.low} mmHg</div>
+          <div class="hi-meta">
+            <span>${record.date}</span>
+            <span>${record.time || ''}</span>
+            <span class="record-chip ${record.medication ? 'medication' : 'no-medication'}">${record.medication ? '✓ 已服药' : '✗ 未服药'}</span>
+            ${record.note ? `<span>${escHtml(record.note)}</span>` : ''}
+          </div>
+        </div>
+        <div class="hi-pulse">${record.pulse || '--'}<br><span style="font-size:10px;font-weight:500">次/分</span></div>
+      </div>
+    `
+  }).join('')
+}
+
+// ============================================================
+//  PAGE: 设置
+// ============================================================
+function loadSettingsPage() {
+  const data = loadData()
+  document.getElementById('total-count').textContent = data.length + ' 条'
+  const standards = getStandards()
+  const standardEl = document.getElementById('standard-high-display')
+  if (standardEl) standardEl.textContent = `≥${standards.high} / ${standards.low}`
+  const mockCount = data.filter(r => r.isMock).length
+  const mockCountEl = document.getElementById('mock-count')
+  if (mockCountEl) mockCountEl.textContent = mockCount + ' 条'
+  const adminSection = document.getElementById('admin-demo-section')
+  if (adminSection) adminSection.style.display = isLocalAdminMode() ? 'block' : 'none'
+
+  // 备份提醒
+  const lastBackup = getLastBackupTime()
+  const reminderEl = document.getElementById('backup-reminder')
+  if (data.length > 0) {
+    if (!lastBackup) {
+      reminderEl.style.display = 'flex'
+    } else {
+      const daysSince = (Date.now() - new Date(lastBackup).getTime()) / (24 * 60 * 60 * 1000)
+      if (daysSince > 7) {
+        reminderEl.style.display = 'flex'
+      } else {
+        reminderEl.style.display = 'none'
+      }
+    }
+  } else {
+    reminderEl.style.display = 'none'
+  }
+}
+
+async function showStandardEditor() {
+  const current = getStandards()
+  const highText = prompt('请输入高压提醒值', current.high)
+  if (highText === null) return
+  const lowText = prompt('请输入低压提醒值', current.low)
+  if (lowText === null) return
+
+  const high = parseInt(highText, 10)
+  const low = parseInt(lowText, 10)
+  if (!high || !low || high < 100 || high > 220 || low < 60 || low > 140 || low >= high) {
+    showToast('请输入合理的提醒值')
+    return
+  }
+
+  saveStandards({ high, low })
+  showToast('提醒值已更新')
+  trackEvent('settings_save', { action: 'custom_standard', page: currentTab })
+  loadSettingsPage()
+  loadIndexPage()
+  if (currentTab === 'chart') loadChartPage()
+  if (currentTab === 'history') searchHistory()
+}
+
+async function seedMockMonthData() {
+  if (!isLocalAdminMode()) { showToast('未开启管理员演示模式'); return }
+  const ok = await showConfirm('生成模拟数据', '将先清除旧模拟数据，再生成最近 30 天模拟血压记录。真实记录不会被删除。', '生成', false)
+  if (!ok) return
+
+  const currentData = loadData()
+  const cleaned = window.AnkangLogic.removeMockRecords(currentData).kept
+  const mockRecords = window.AnkangLogic.createMockMonthRecords({
+    endDate: formatDate(new Date()),
+    days: 30,
+    batchId: 'demo-month-' + formatDate(new Date()),
+  })
+
+  saveData([...cleaned, ...mockRecords])
+  showToast(`已生成 ${mockRecords.length} 条模拟数据`)
+  trackEvent('admin_demo', { action: 'seed_mock_month', page: currentTab })
+  loadSettingsPage()
+  loadIndexPage()
+  if (currentTab === 'chart') loadChartPage()
+  if (currentTab === 'history') searchHistory()
+}
+
+async function clearMockData() {
+  if (!isLocalAdminMode()) { showToast('未开启管理员演示模式'); return }
+  const currentData = loadData()
+  const result = window.AnkangLogic.removeMockRecords(currentData)
+  if (result.removedCount === 0) { showToast('没有模拟数据'); return }
+  const ok = await showConfirm('清除模拟数据', `将删除 ${result.removedCount} 条模拟数据，真实记录会保留。`, '清除', true)
+  if (!ok) return
+
+  saveData(result.kept)
+  showToast(`已清除 ${result.removedCount} 条模拟数据`)
+  trackEvent('admin_demo', { action: 'clear_mock_data', page: currentTab })
+  loadSettingsPage()
+  loadIndexPage()
+  if (currentTab === 'chart') loadChartPage()
+  if (currentTab === 'history') searchHistory()
+}
+
+async function exportJSON() {
+  const data = loadData()
+  const exportData = {
+    version: '1.2.0',
+    app: '安康血压记录',
+    exportTime: new Date().toISOString(),
+    standard: {
+      singleHigh: '140/90',
+      homeAverageAttention: '135/85',
+    },
+    records: data
+  }
+  const filename = `安康血压记录_${formatDate(new Date())}.json`
+  const content = JSON.stringify(exportData, null, 2)
+
+  const blob = new Blob([content], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  setTimeout(() => URL.revokeObjectURL(url), 300)
+
+  // 记录备份时间
+  recordBackupTime()
+  showToast('已导出 JSON 备份')
+  trackEvent('backup_export', { action: 'export_json', page: currentTab })
+}
+
+function importJSON(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = async (e) => {
+    try {
+      const importData = JSON.parse(e.target.result)
+
+      if (!importData.records || !Array.isArray(importData.records)) {
+        showToast('文件格式不正确')
+        return
+      }
+
+      const currentData = loadData()
+      const existingIds = new Set(currentData.map(r => r._id))
+
+      let added = 0
+      importData.records.forEach(record => {
+        if (!existingIds.has(record._id)) {
+          currentData.push(window.AnkangLogic.normalizeRecord(record))
+          added++
+        }
+      })
+
+      saveData(currentData)
+
+      showToast(`已导入 ${added} 条新记录`)
+      trackEvent('backup_import', { action: 'import_json', page: currentTab, result: added > 0 ? 'added' : 'none' })
+      loadSettingsPage()
+
+      if (currentTab === 'index') loadIndexPage()
+      if (currentTab === 'chart') loadChartPage()
+      if (currentTab === 'history') searchHistory()
+    } catch (err) {
+      showToast('导入失败：' + err.message)
+    }
+  }
+  reader.readAsText(file)
+  event.target.value = ''
+}
+
+async function clearAllRecords() {
+  const ok = await showConfirm('确认清空', '将删除所有血压记录，此操作不可恢复。确定继续？', '清空', true)
+  if (!ok) return
+
+  saveData([])
+  showToast('已清空所有记录')
+  trackEvent('records_clear', { action: 'clear_all', page: currentTab })
+  loadSettingsPage()
+  if (currentTab === 'index') loadIndexPage()
+  if (currentTab === 'chart') loadChartPage()
+  if (currentTab === 'history') searchHistory()
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function escHtml(str) {
+  if (!str) return ''
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function initLongPressGuards() {
+  const root = document.body
+  if (!root || root.__nativeLongPressGuardBound) return
+  root.__nativeLongPressGuardBound = true
+  root.addEventListener('contextmenu', (e) => {
+    const tagName = e.target.tagName ? e.target.tagName.toUpperCase() : ''
+    if (tagName !== 'INPUT' && tagName !== 'TEXTAREA') e.preventDefault()
+  }, true)
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return
+  if (location.protocol === 'file:') return
+  navigator.serviceWorker.register('./sw.js').catch(() => {})
+}
+
+initLongPressGuards()
+registerServiceWorker()
+loadIndexPage()
+showLocalStorageReminderOnce()
+trackEvent('page_view', { page: 'index' })
+
+window.addEventListener('resize', () => {
+  if (currentTab === 'chart') drawChart()
+})
+</script>
+</body>
+</html>
