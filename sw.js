@@ -1,7 +1,8 @@
-const CACHE_NAME = 'ankang-bp-v1.4.2'
+const CACHE_NAME = 'ankang-bp-v1.4.3'
 const APP_ASSETS = [
   './',
   './index.html',
+  './guide.html',
   './app-logic.js',
   './manifest.json',
   './icon.svg',

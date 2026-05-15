@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f5f9f7">
+<title>使用说明 - 安康血压记录</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f9f7;
+    --paper: #fffdfa;
+    --green: #2db87a;
+    --green-dark: #167a52;
+    --mint: #eef8f3;
+    --ink: #1e2d2b;
+    --muted: #6b8a82;
+    --orange: #f5a623;
+    --red: #d94b4b;
+    --line: #dbe9e2;
+    --shadow: 0 10px 32px rgba(45,184,122,0.10);
+    --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  html, body {
+    min-height: 100%;
+    background: linear-gradient(180deg, var(--bg), #eaf3ee);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+  }
+  body { padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0); }
+  .shell {
+    width: min(760px, 100%);
+    min-height: 100vh;
+    margin: 0 auto;
+    background: rgba(255,253,250,0.9);
+  }
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255,253,250,0.96);
+    border-bottom: 1px solid rgba(45,184,122,0.10);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .back {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 12px;
+    background: var(--mint);
+    color: var(--green-dark);
+    font-size: 24px;
+    line-height: 1;
+    font-family: var(--font);
+  }
+  .top-title { flex: 1; min-width: 0; }
+  .top-title b { display: block; font-size: 17px; }
+  .top-title span { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+  main { padding: 18px 16px 28px; }
+  .hero {
+    background: linear-gradient(135deg, rgba(45,184,122,0.12), rgba(62,198,176,0.08));
+    border: 1px solid rgba(45,184,122,0.14);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  h1 { font-size: 26px; line-height: 1.25; letter-spacing: 0; margin-bottom: 10px; }
+  .hero p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .quick {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .quick-item {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+  .quick-item b { display: block; color: var(--green-dark); font-size: 15px; margin-bottom: 4px; }
+  .quick-item span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+  section {
+    margin-top: 14px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 6px 20px rgba(45,184,122,0.06);
+  }
+  h2 { font-size: 18px; color: var(--green-dark); margin-bottom: 10px; }
+  h3 { font-size: 15px; margin: 14px 0 6px; }
+  p, li { color: var(--muted); font-size: 14px; line-height: 1.75; }
+  ol, ul { padding-left: 20px; }
+  li { margin: 5px 0; }
+  .notice {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #fff8e8;
+    border-left: 5px solid var(--orange);
+    color: #6b5532;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .notice.danger {
+    background: #fff1f1;
+    border-left-color: var(--red);
+    color: #7d3b3b;
+  }
+  .footer {
+    margin-top: 18px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .footer a { color: var(--green-dark); text-decoration: none; font-weight: 700; }
+  @media (max-width: 430px) {
+    .quick { grid-template-columns: 1fr; }
+    main { padding: 14px 12px 24px; }
+    section, .hero { border-radius: 16px; padding: 16px; }
+    h1 { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <button class="back" onclick="history.length > 1 ? history.back() : location.href='./index.html'" aria-label="返回">‹</button>
+    <div class="top-title">
+      <b>安康血压记录使用说明</b>
+      <span>打开网页即可记录，也可以添加到桌面或主屏幕</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>三步开始记录血压</h1>
+      <p>适合日常记录、查看近期变化、给自己或家人留存测量记录。本工具只做记录和趋势提醒，不替代医生诊断。</p>
+      <div class="quick">
+        <div class="quick-item"><b>1. 记录</b><span>点首页的快捷记录或手动填写</span></div>
+        <div class="quick-item"><b>2. 查看</b><span>到趋势页看 7 天、30 天变化</span></div>
+        <div class="quick-item"><b>3. 备份</b><span>定期在设置里备份数据</span></div>
+      </div>
+    </div>
+
+    <section>
+      <h2>如何记录血压</h2>
+      <ol>
+        <li><b>快捷记录：</b>输入或粘贴“128 82 72”这类数字，系统会自动识别高压、低压和脉搏。</li>
+        <li><b>手动填写：</b>逐项填写高压、低压、脉搏、是否服药和备注。</li>
+        <li><b>补录历史：</b>忘记当天记录时，可以选择过去日期补录测量结果。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>如何看趋势</h2>
+      <ol>
+        <li>点击底部「趋势」。</li>
+        <li>选择「近7天」「近30天」或「自定义」。</li>
+        <li>查看平均高压、平均低压、偏高天数、偏高记录和每日颜色变化。</li>
+      </ol>
+      <p>趋势图使用每日平均值展示变化，同时保留偏高记录统计，既能看整体变化，也能看到单次偏高情况。</p>
+    </section>
+
+    <section>
+      <h2>添加到桌面或主屏幕</h2>
+      <h3>苹果 iPhone / iPad</h3>
+      <ol>
+        <li>用 Safari 打开 <b>www.ankang.site</b>。</li>
+        <li>点击底部分享按钮。</li>
+        <li>选择「添加到主屏幕」。</li>
+      </ol>
+      <h3>安卓 / 华为 / 荣耀</h3>
+      <ol>
+        <li>用系统浏览器、Chrome、Edge 或华为浏览器打开网站。</li>
+        <li>点击浏览器菜单。</li>
+        <li>选择「添加到桌面」「添加到主屏幕」或「安装应用」。</li>
+      </ol>
+      <div class="notice">如果在微信等内置浏览器里找不到添加入口，请先选择「在浏览器打开」，再添加到桌面。</div>
+    </section>
+
+    <section>
+      <h2>数据保存和备份</h2>
+      <p>血压记录默认只保存在当前手机浏览器中。清理浏览器数据、换手机或更换浏览器，可能导致本机记录丢失。</p>
+      <ol>
+        <li>建议定期进入「设置」点击「备份数据」。</li>
+        <li>换手机前，先导出备份文件。</li>
+        <li>在新手机打开网站后，选择「从备份恢复」。</li>
+      </ol>
+      <div class="notice danger">血压持续偏高、明显不适或需要调整用药时，请及时咨询医生。</div>
+    </section>
+
+    <section>
+      <h2>常见问题</h2>
+      <h3>为什么换手机后看不到以前的数据？</h3>
+      <p>数据保存在原手机浏览器里。请在原手机导出备份，再到新手机恢复。</p>
+      <h3>趋势里的“偏高天数”和“偏高记录”有什么区别？</h3>
+      <p>偏高天数按天统计，一天内有一次偏高就算 1 天。偏高记录按每条记录统计，更适合看单次异常次数。</p>
+      <h3>如何反馈问题？</h3>
+      <p>进入「设置」点击「意见反馈」，可以提交使用建议或遇到的问题。反馈不会包含您的血压记录、脉搏、测量日期或备注。</p>
+    </section>
+
+    <div class="footer">
+      安康血压记录<br>
+      <a href="./index.html">返回首页</a> · <a href="https://www.ankang.site/">www.ankang.site</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -458,6 +458,20 @@
     margin-top: 8px;
     opacity: 0.8;
   }
+  .empty-guide {
+    margin-top: 12px;
+    border: 1.5px solid rgba(45,184,122,0.18);
+    background: rgba(255,255,255,0.72);
+    color: var(--c-green-text);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .empty-guide:active { transform: scale(0.98); }
 
   .bottom-actions {
     flex-shrink: 0;
@@ -533,6 +547,7 @@
     }
     .empty-state p { font-size: 13px; }
     .empty-state .empty-hint { margin-top: 4px; }
+    .empty-guide { margin-top: 8px; padding: 7px 12px; }
     .bottom-actions { padding: 10px 16px 12px; }
     .main-buttons { gap: 8px; margin-bottom: 7px; }
     .action-btn {
@@ -1223,7 +1238,8 @@
         <div class="settings-title">安装与反馈</div>
         <div class="card settings-card">
           <div class="export-actions">
-            <button class="btn btn-primary" onclick="installApp()">添加到桌面 / 主屏幕</button>
+            <button class="btn btn-primary" onclick="openGuide()">使用说明</button>
+            <button class="btn btn-ghost" onclick="installApp()">添加到桌面 / 主屏幕</button>
             <button class="btn btn-ghost" onclick="copyAppLink()">复制网址</button>
             <button class="btn btn-teal" onclick="openFeedback()">意见反馈</button>
           </div>
@@ -1523,7 +1539,7 @@ const ADMIN_KEY = 'bp_admin_enabled_v1'
 const LOCAL_NOTICE_KEY = 'bp_local_notice_seen_v1'
 const STANDARD_KEY = 'bp_standard_v1'
 const PUBLIC_APP_URL = 'https://www.ankang.site'
-const APP_VERSION = '1.4.2'
+const APP_VERSION = '1.4.3'
 const API_BASE = (window.ANKANG_API_BASE || '').replace(/\/$/, '')
 const API_FALLBACK_BASE = 'https://ankang-api.tangwaytoagi.workers.dev'
 let deferredInstallPrompt = null
@@ -1652,6 +1668,11 @@ function copyAppLink() {
     showToast(url, 4000)
   }
   trackEvent('install_help', { action: 'copy_link', page: currentTab })
+}
+
+function openGuide() {
+  trackEvent('guide', { action: 'open', page: currentTab })
+  window.location.href = './guide.html'
 }
 
 async function openFeedback() {
@@ -2060,7 +2081,8 @@ function loadTodayRecords() {
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
       </svg>
       <p>今天还没有记录</p>
-      <p class="empty-hint">点击下方按钮开始记录吧</p>
+      <p class="empty-hint">点「快捷记录」或「手动填写」开始，记录后可到「趋势」查看变化。</p>
+      <button class="empty-guide" onclick="openGuide()">查看使用说明</button>
     </div>`
     return
   }
