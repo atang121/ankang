@@ -801,6 +801,37 @@
   .info-row:last-child { border-bottom: none; }
   .info-row-label { font-weight: 500; color: var(--c-dark); }
   .info-row-value { font-weight: 600; color: var(--c-primary); }
+  .standard-row {
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .standard-values {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .standard-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: #f0f7f3;
+    border: 1px solid rgba(45,184,122,0.10);
+    color: var(--c-dark);
+  }
+  .standard-pill b {
+    color: var(--c-primary);
+    font-size: 15px;
+  }
+  .standard-pill span {
+    color: var(--c-muted);
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .standard-separator { color: var(--c-muted); font-weight: 600; }
   .mini-link-btn {
     border: none;
     background: transparent;
@@ -810,6 +841,24 @@
     font-family: var(--font);
     cursor: pointer;
     padding: 4px;
+  }
+  .standard-editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .standard-field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--c-dark);
+    margin-bottom: 6px;
+  }
+  .standard-field-help {
+    font-size: 11px;
+    color: var(--c-muted);
+    line-height: 1.5;
+    margin-top: 12px;
   }
   .info-row-hint {
     font-size: 11px;
@@ -1083,9 +1132,14 @@
       <div class="settings-section">
         <div class="settings-title">判定标准</div>
         <div class="card settings-card">
-          <div class="info-row">
+          <div class="info-row standard-row">
             <span class="info-row-label">单次偏高提醒</span>
-            <span class="info-row-value"><span id="standard-high-display">≥140 / 90</span>　<button class="mini-link-btn" onclick="showStandardEditor()">自定义</button></span>
+            <span class="info-row-value standard-values">
+              <span class="standard-pill"><span>高压/收缩压</span><b id="standard-high-display">≥140</b></span>
+              <span class="standard-separator">/</span>
+              <span class="standard-pill"><span>低压/舒张压</span><b id="standard-low-display">≥90</b></span>
+              <button class="mini-link-btn" onclick="showStandardEditor()">自定义</button>
+            </span>
           </div>
           <div class="info-row">
             <span class="info-row-label">家庭均值关注</span>
@@ -1379,6 +1433,29 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="hideModal('feedback')">取消</button>
       <button class="btn btn-primary" onclick="submitFeedback()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 偏高提醒设置 Modal -->
+<div class="modal-overlay" id="modal-standard" style="display:none" onclick="if(event.target===this)hideModal('standard')">
+  <div class="modal-box">
+    <div class="modal-title">自定义偏高提醒</div>
+    <div class="modal-subtitle">按医生建议调整单次记录的提醒阈值。</div>
+    <div class="standard-editor-grid">
+      <div>
+        <label class="standard-field-label" for="standard-high-input">高压 / 收缩压</label>
+        <input type="number" class="input-field high" id="standard-high-input" min="100" max="220" inputmode="numeric" />
+      </div>
+      <div>
+        <label class="standard-field-label" for="standard-low-input">低压 / 舒张压</label>
+        <input type="number" class="input-field low" id="standard-low-input" min="60" max="140" inputmode="numeric" />
+      </div>
+    </div>
+    <div class="standard-field-help">超过任一数值时会标记为偏高。该设置只影响本机提醒和趋势显示。</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="resetStandardEditor()">恢复默认</button>
+      <button class="btn btn-primary" onclick="saveStandardEditor()">保存</button>
     </div>
   </div>
 </div>
@@ -2703,8 +2780,10 @@ function loadSettingsPage() {
   const data = loadData()
   document.getElementById('total-count').textContent = data.length + ' 条'
   const standards = getStandards()
-  const standardEl = document.getElementById('standard-high-display')
-  if (standardEl) standardEl.textContent = `≥${standards.high} / ${standards.low}`
+  const standardHighEl = document.getElementById('standard-high-display')
+  const standardLowEl = document.getElementById('standard-low-display')
+  if (standardHighEl) standardHighEl.textContent = `≥${standards.high}`
+  if (standardLowEl) standardLowEl.textContent = `≥${standards.low}`
   const mockCount = data.filter(r => r.isMock).length
   const mockCountEl = document.getElementById('mock-count')
   if (mockCountEl) mockCountEl.textContent = mockCount + ' 条'
@@ -2732,25 +2811,34 @@ function loadSettingsPage() {
 
 async function showStandardEditor() {
   const current = getStandards()
-  const highText = prompt('请输入高压提醒值', current.high)
-  if (highText === null) return
-  const lowText = prompt('请输入低压提醒值', current.low)
-  if (lowText === null) return
+  document.getElementById('standard-high-input').value = current.high
+  document.getElementById('standard-low-input').value = current.low
+  document.getElementById('modal-standard').style.display = 'flex'
+  setTimeout(() => document.getElementById('standard-high-input').focus(), 100)
+  trackEvent('settings_save', { action: 'open_custom_standard', page: currentTab })
+}
 
-  const high = parseInt(highText, 10)
-  const low = parseInt(lowText, 10)
+function saveStandardEditor() {
+  const high = parseInt(document.getElementById('standard-high-input').value, 10)
+  const low = parseInt(document.getElementById('standard-low-input').value, 10)
   if (!high || !low || high < 100 || high > 220 || low < 60 || low > 140 || low >= high) {
-    showToast('请输入合理的提醒值')
+    showToast('请输入合理的高压和低压提醒值')
     return
   }
 
   saveStandards({ high, low })
+  hideModal('standard')
   showToast('提醒值已更新')
   trackEvent('settings_save', { action: 'custom_standard', page: currentTab })
   loadSettingsPage()
   loadIndexPage()
   if (currentTab === 'chart') loadChartPage()
   if (currentTab === 'history') searchHistory()
+}
+
+function resetStandardEditor() {
+  document.getElementById('standard-high-input').value = 140
+  document.getElementById('standard-low-input').value = 90
 }
 
 async function seedMockMonthData() {
