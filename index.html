@@ -371,7 +371,7 @@
   }
   .overview-avg b { color: var(--c-dark); font-weight: 700; }
 
-  .today-list-wrap { flex: 1; padding: 0 16px 10px; }
+  .today-list-wrap { flex: 1; min-height: 0; padding: 0 16px 10px; }
   .section-label {
     font-size: 12px;
     color: var(--c-primary);
@@ -445,7 +445,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 50px 20px;
+    min-height: 148px;
+    padding: 24px 20px;
     color: var(--c-primary);
     opacity: 0.6;
   }
@@ -510,6 +511,38 @@
     letter-spacing: 0.5px;
   }
   .supplement-btn:active { transform: translateY(1px); }
+
+  @media (max-height: 740px) {
+    .index-header { padding: 14px 16px 10px; }
+    .index-brand { margin-bottom: 2px; }
+    .index-date { font-size: 18px; }
+    .overview-card { margin: 10px 16px 8px; padding: 14px; }
+    .overview-grid { gap: 8px; margin-bottom: 10px; }
+    .overview-item { padding: 8px 6px; }
+    .overview-status { padding: 8px; }
+    .today-list-wrap { padding-bottom: 6px; }
+    .section-label { margin-bottom: 6px; }
+    .empty-state {
+      min-height: 100px;
+      padding: 12px 16px;
+    }
+    .empty-state svg {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 6px;
+    }
+    .empty-state p { font-size: 13px; }
+    .empty-state .empty-hint { margin-top: 4px; }
+    .bottom-actions { padding: 10px 16px 12px; }
+    .main-buttons { gap: 8px; margin-bottom: 7px; }
+    .action-btn {
+      min-height: 68px;
+      border-radius: 16px;
+      gap: 4px;
+    }
+    .action-btn svg { width: 21px; height: 21px; }
+    .supplement-btn { padding: 11px; }
+  }
 
   /* ===== PAGE: 趋势 ===== */
   .chart-header {
@@ -1476,7 +1509,7 @@
 
 <script>
   // 部署时配置 Worker API 根地址，例如 https://api.ankang.site
-  window.ANKANG_API_BASE = window.ANKANG_API_BASE || 'https://ankang-api.tangwaytoagi.workers.dev'
+  window.ANKANG_API_BASE = window.ANKANG_API_BASE || (location.protocol === 'file:' ? 'https://ankang-api.tangwaytoagi.workers.dev' : '/api')
 </script>
 <script src="./app-logic.js"></script>
 <script>
@@ -1490,8 +1523,9 @@ const ADMIN_KEY = 'bp_admin_enabled_v1'
 const LOCAL_NOTICE_KEY = 'bp_local_notice_seen_v1'
 const STANDARD_KEY = 'bp_standard_v1'
 const PUBLIC_APP_URL = 'https://www.ankang.site'
-const APP_VERSION = '1.4.1'
+const APP_VERSION = '1.4.2'
 const API_BASE = (window.ANKANG_API_BASE || '').replace(/\/$/, '')
+const API_FALLBACK_BASE = 'https://ankang-api.tangwaytoagi.workers.dev'
 let deferredInstallPrompt = null
 
 function loadData() {
@@ -1557,7 +1591,12 @@ function trackEvent(event, meta = {}) {
   const endpoint = API_BASE + '/collect'
   try {
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }))
+      const sent = navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }))
+      if (sent) return
+      if (API_BASE.startsWith('/') && API_FALLBACK_BASE) {
+        navigator.sendBeacon(API_FALLBACK_BASE + '/collect', new Blob([body], { type: 'application/json' }))
+        return
+      }
       return
     }
     fetch(endpoint, {
@@ -1565,6 +1604,15 @@ function trackEvent(event, meta = {}) {
       headers: { 'Content-Type': 'application/json' },
       body,
       keepalive: true,
+    }).catch(() => {
+      if (!API_BASE.startsWith('/') || !API_FALLBACK_BASE) return
+      fetch(API_FALLBACK_BASE + '/collect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      }).catch(() => {})
+      return
     }).catch(() => {})
   } catch (err) {}
 }
@@ -1641,17 +1689,16 @@ async function submitFeedback() {
       submitBtn.disabled = true
       submitBtn.textContent = '提交中...'
     }
-    const res = await fetch(API_BASE + '/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    if (!res.ok) throw new Error('HTTP ' + res.status)
+    const res = await postJsonWithFallback('/feedback', payload)
+    if (!res.ok) throw new Error(res.error || ('HTTP ' + res.status))
     hideModal('feedback')
     showToast('反馈已提交，感谢建议')
     trackEvent('feedback', { action: 'submit_success', page: currentTab })
   } catch (err) {
-    showToast('提交失败，请稍后再试')
+    const message = err && err.message && err.message.includes('network')
+      ? '网络连接不稳定，请稍后再试'
+      : '提交失败，请稍后再试'
+    showToast(message)
     trackEvent('feedback', { action: 'submit_fail', page: currentTab, result: 'network_error' })
   } finally {
     if (submitBtn) {
@@ -1659,6 +1706,41 @@ async function submitFeedback() {
       submitBtn.textContent = '提交'
     }
   }
+}
+
+async function postJsonWithFallback(path, payload) {
+  const primary = API_BASE + path
+  try {
+    const first = await postJson(primary, payload)
+    if (first.ok) return first
+    if (!shouldTryFallback(first.status)) return first
+  } catch (err) {
+    if (!API_BASE.startsWith('/')) throw new Error('network_error')
+  }
+
+  if (!API_FALLBACK_BASE || API_BASE === API_FALLBACK_BASE) {
+    throw new Error('network_error')
+  }
+  return postJson(API_FALLBACK_BASE + path, payload)
+}
+
+async function postJson(url, payload) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  let data = null
+  try { data = await res.json() } catch (_) {}
+  return {
+    ok: res.ok && (!data || data.ok !== false),
+    status: res.status,
+    error: data && data.error ? data.error : '',
+  }
+}
+
+function shouldTryFallback(status) {
+  return status === 0 || status === 404 || status === 405 || status >= 500
 }
 
 function getDeviceSummary() {

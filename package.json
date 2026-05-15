@@ -1,6 +1,6 @@
 {
   "name": "ankang",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
   "scripts": {
     "test": "node --test tests/app-logic.test.mjs",

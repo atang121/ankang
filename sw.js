@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ankang-bp-v1.4.1'
+const CACHE_NAME = 'ankang-bp-v1.4.2'
 const APP_ASSETS = [
   './',
   './index.html',
